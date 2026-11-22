@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>EduPractice Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -129,12 +130,14 @@ function shell(){
   const adm=S.user.role==='admin';
   const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
   document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
-  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 4</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
   go(adm?'home':'cat');
 }
+const showErr=e=>{const c=String(e&&(e.code||e.message)||'lỗi không rõ');if($('#main'))$('#main').innerHTML=`<div class="card bad"><h3>Không tải được trang này</h3><p>Chi tiết: <code>${esc(c)}</code></p>${/permission|insufficient/i.test(c)?'<p>Firestore Rules đang chặn việc đọc hoặc ghi dữ liệu. Hãy cập nhật Rules để có thêm collection <code>lessons</code>, rồi bấm Publish và tải lại trang.</p>':''}</div>`};
+addEventListener('unhandledrejection',e=>toast('Lỗi: '+String(e.reason&&(e.reason.code||e.reason.message)||e.reason)));
 function go(v){
   S.off&&S.off();S.off=null;if(X){X.stop();X=null}
-  S.v=v;const hv={course:'cat',lessons:'courses'}[v]||v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===hv));VIEWS[v]();
+  S.v=v;const hv={course:'cat',lessons:'courses'}[v]||v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===hv));Promise.resolve(VIEWS[v]()).catch(showErr);
 }
 ACT.go=d=>go(d.v);
 ACT.del=async d=>{if(!confirm('Xóa mục này?'))return;if(S.v==='bank'){S.cid=$('#bc').value;S.lid=$('#bl').value}
@@ -162,7 +165,7 @@ const courseCard=(c,mode)=>`<div class="cc"><div class="im">${cover(c)}</div><di
   :mode==='guest'?`<button class="btn" data-act="gologin" style="margin-top:auto">Đăng nhập để tham gia</button>`
   :`<span class="mu sm">Xem trước giao diện học viên</span>`}</div></div>`;
 ACT.gologin=()=>{const i=document.querySelector('input[name=user]');if(i){i.scrollIntoView({block:'center'});i.focus()}};
-async function loadLN(){LN={};(await DB.list('lessons')).forEach(l=>LN[l.courseId]=(LN[l.courseId]||0)+1)}
+async function loadLN(){LN={};try{(await DB.list('lessons')).forEach(l=>LN[l.courseId]=(LN[l.courseId]||0)+1)}catch(e){}}
 VIEWS.cat=async()=>{
   await loadLN();
   const[cs,en]=await Promise.all([DB.list('courses'),DB.list('enroll')]),adm=S.user.role==='admin',mine=new Set(en.filter(e=>e.user===S.user.id).map(e=>e.courseId));
@@ -261,7 +264,7 @@ ACT.lmv=async d=>{const ls=Object.values(LC).sort((a,b)=>a.order-b.order),i=ls.f
 
 /* ---- Trang khóa học của học viên: danh sách bài học ---- */
 ACT.open=d=>{S.cid=d.c;go('course')};
-ACT.enter=async d=>{const ls=(await DB.list('lessons')).filter(l=>l.courseId===d.c);if(ls.length){S.cid=d.c;return go('course')}const a=(await DB.list('attempts')).find(x=>x.user===S.user.id&&x.courseId===d.c&&x.status==='doing'&&!x.lessonId);if(a)exam(a);else ACT.start(d)};
+ACT.enter=d=>{S.cid=d.c;go('course')};
 VIEWS.course=async()=>{
   const[cs,ls,qs,at,en]=await Promise.all(['courses','lessons','questions','attempts','enroll'].map(x=>DB.list(x))),c=cs.find(x=>x.id===S.cid);
   if(!c||!en.some(e=>e.id===S.user.id+'_'+c.id))return go('cat');
@@ -290,7 +293,6 @@ ACT.start=async d=>{
   const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,updated:Date.now()};
   await DB.put('attempts',A.id,A);exam(A);
 };
-ACT.enter=async d=>{const a=(await DB.list('attempts')).find(x=>x.user===S.user.id&&x.courseId===d.c&&x.status==='doing');if(a)exam(a);else ACT.start(d)};
 ACT.resume=async d=>exam((await DB.list('attempts')).find(a=>a.id===d.a));
 function exam(A){
   S.off&&S.off();S.cid=A.courseId;const qs=A.qs;
