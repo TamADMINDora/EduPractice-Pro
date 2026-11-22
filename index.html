@@ -60,7 +60,9 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 .cc .jf{display:flex;gap:8px;margin-top:auto}.cc .jf input{min-width:0}
 .th{width:96px;flex:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--ln)}
 @media(max-width:800px){.app{grid-template-columns:1fr}aside{position:static;height:auto}nav{flex-direction:row;flex-wrap:wrap}.exam{grid-template-columns:1fr}.side{position:static}main{padding:16px}}
-@media(prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
+.sync{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--g);flex:none}.sync.off{background:var(--a)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.55)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+@media(prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.sync:not(.off){animation:pulse 1.8s infinite}}
 </style>
 </head>
 <body>
@@ -88,10 +90,10 @@ async function fsInit(cfg){
 }
 let DB=LS,MODE='Lưu cục bộ trong trình duyệt',PID='';
 /* Dán cấu hình Firebase (dạng JSON) thay cho null để MỌI người mở web đều tự liên kết cloud. Lấy sẵn dòng này trong Cài đặt. */
-const EMBEDDED_CFG={"apiKey":"AIzaSyDprku7v6AVcUq9cM871HbrZOGNnJZqmeY","authDomain":"edulearn-677c5.firebaseapp.com","projectId":"edulearn-677c5","storageBucket":"edulearn-677c5.firebasestorage.app","messagingSenderId":"559238512834","appId":"1:559238512834:web:06141c945fb82345197b5b","measurementId":"G-5312JR7T95"};
-const badge=()=>PID?`<span class="tag g"><span class="dot"></span>Đã liên kết cloud: ${esc(PID)}</span>`:`<span class="tag a">Chế độ cục bộ, chưa liên kết cloud</span>`;
+const EMBEDDED_CFG={"apiKey":"AIzaSyDprku7v6AVcUq9cM871HbrZOGNnJZqmeY","authDomain":"edulearn-677c5.firebaseapp.com","projectId":"edulearn-677c5","storageBucket":"edulearn-677c5.firebasestorage.app","messagingSenderId":"559238512834","appId":"1:559238512834:web:06141c945fb82345197b5b","measurementId":"G-5312JR7T95"}
+const badge=()=>PID?`<span class="sync" role="img" title="Đã đồng bộ cloud: ${esc(PID)}" aria-label="Đã đồng bộ cloud"></span>`:`<span class="sync off" role="img" title="Chưa đồng bộ cloud (chế độ cục bộ)" aria-label="Chưa đồng bộ cloud"></span>`;
 const S={user:null,v:'',off:null};let X=null;
-const ACT={},FORM={},VIEWS={};
+const ACT={},FORM={},VIEWS={};let LN={},QC={},LC={};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&ACT[b.dataset.act])ACT[b.dataset.act](b.dataset,b)});
 document.addEventListener('submit',e=>{const f=e.target.closest('form[data-f]');if(!f)return;e.preventDefault();FORM[f.dataset.f](f,Object.fromEntries(new FormData(f)))});
 document.addEventListener('input',e=>{if(e.target.id==='sa')ACT.sa(e.target.value)});
@@ -109,10 +111,10 @@ async function boot(){
   if(me){const u=(await DB.list('users')).find(x=>x.id===me);if(u){S.user=u;return shell()}}
   loginView();
 }
-async function showCase(){const cs=await DB.list('courses');if(!cs.length||!$('#sc'))return;$('#sc').innerHTML=`<div style="max-width:1100px;margin:30px auto 0;padding:0 16px 40px"><h2 style="margin:0 0 14px">Các khóa học đang mở</h2><div class="cg">${cs.map(c=>courseCard(c,'guest')).join('')}</div></div>`}
+async function showCase(){await loadLN();const cs=await DB.list('courses');if(!cs.length||!$('#sc'))return;$('#sc').innerHTML=`<div style="max-width:1100px;margin:30px auto 0;padding:0 16px 40px"><h2 style="margin:0 0 14px">Các khóa học đang mở</h2><div class="cg">${cs.map(c=>courseCard(c,'guest')).join('')}</div></div>`}
 async function loginView(){
   const first=!(await DB.list('users')).length;
-  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px">EduPractice <span>Pro</span></div><div style="margin-bottom:10px">${badge()}</div><p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
+  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px;display:flex;align-items:center;gap:12px">EduPractice <span>Pro</span>${badge()}</div><p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
   <form class="card" data-f="${first?'setup':'login'}">${first?'<div style="margin-bottom:12px"><label>Họ tên</label><input name="name" required></div>':''}
   <div style="margin-bottom:12px"><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+" autocomplete="username"></div>
   <div style="margin-bottom:16px"><label>Mật khẩu</label><input name="pw" type="password" required minlength="6" autocomplete="current-password"></div>
@@ -126,17 +128,19 @@ ACT.out=()=>{X&&X.stop&&X.stop();X=null;S.off&&S.off();sessionStorage.removeItem
 function shell(){
   const adm=S.user.role==='admin';
   const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
-  document.body.innerHTML=`<div class="app"><aside><div class="brand">EduPractice <span>Pro</span></div><div>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
+  document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
   <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
   go(adm?'home':'cat');
 }
 function go(v){
   S.off&&S.off();S.off=null;if(X){X.stop();X=null}
-  S.v=v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));VIEWS[v]();
+  S.v=v;const hv={course:'cat',lessons:'courses'}[v]||v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===hv));VIEWS[v]();
 }
 ACT.go=d=>go(d.v);
-ACT.del=async d=>{if(!confirm('Xóa mục này?'))return;await DB.del(d.c,d.i);
-  if(d.c==='courses')for(const q of(await DB.list('questions')).filter(q=>q.courseId===d.i))await DB.del('questions',q.id);
+ACT.del=async d=>{if(!confirm('Xóa mục này?'))return;if(S.v==='bank'){S.cid=$('#bc').value;S.lid=$('#bl').value}
+  await DB.del(d.c,d.i);
+  if(d.c==='courses'){for(const q of(await DB.list('questions')).filter(q=>q.courseId===d.i))await DB.del('questions',q.id);for(const l of(await DB.list('lessons')).filter(l=>l.courseId===d.i))await DB.del('lessons',l.id)}
+  if(d.c==='lessons')for(const q of(await DB.list('questions')).filter(q=>q.lessonId===d.i))await DB.put('questions',q.id,{...q,lessonId:''});
   go(S.v)};
 const cOpts=cs=>cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
 const noCourse=`<div class="card empty"><h3>Chưa có khóa học nào</h3><p class="mu">Tạo khóa học trước, sau đó quay lại đây.</p><button class="btn" data-act="go" data-v="courses">Tạo khóa học</button></div>`;
@@ -152,13 +156,15 @@ VIEWS.home=async()=>{
 const resizeImg=f=>new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const i=new Image();i.onerror=no;i.onload=()=>{const W=640,H=360,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),k=Math.max(W/i.width,H/i.height),w=i.width*k,h=i.height*k;x.drawImage(i,(W-w)/2,(H-h)/2,w,h);ok(c.toDataURL('image/jpeg',.78))};i.src=r.result};r.readAsDataURL(f)});
 const cover=c=>{if(c.img)return`<img src="${esc(c.img)}" alt="">`;let h=0;for(const ch of c.name)h=(h*31+ch.charCodeAt(0))>>>0;const C=['#10B981','#0284C7','#F59E0B'],a=C[h%3],b=C[((h>>3)%3==h%3)?(h%3+1)%3:(h>>3)%3],ini=c.name.trim().split(/\s+/).slice(-2).map(w=>w[0]).join('').toUpperCase(),cx=100+h%400,cy=60+h%240;
 return`<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="360" fill="url(#g${h})"/>${[40,80,120,160,200,240].map(r=>`<ellipse cx="${cx}" cy="${cy}" rx="${r*1.6}" ry="${r}" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2"/>`).join('')}<text x="40" y="320" font-family="JetBrains Mono,monospace" font-size="64" font-weight="600" fill="#fff" fill-opacity=".9">${esc(ini)}</text></svg>`};
-const courseCard=(c,mode)=>`<div class="cc"><div class="im">${cover(c)}</div><div class="bd"><h3>${esc(c.name)}</h3><div class="mu sm">${esc(c.desc)}</div><div class="mono mu sm">Đề ${c.n1+c.n2+c.n3} câu, ${c.mins} phút</div>${
+const courseCard=(c,mode)=>`<div class="cc"><div class="im">${cover(c)}</div><div class="bd"><h3>${esc(c.name)}</h3><div class="mu sm">${esc(c.desc)}</div><div class="mono mu sm">${LN[c.id]?LN[c.id]+' bài học':'Đề '+(c.n1+c.n2+c.n3)+' câu, '+c.mins+' phút'}</div>${
   mode==='join'?`<form class="jf" data-f="catjoin" data-c="${c.id}"><input name="code" required placeholder="Nhập mã kích hoạt" class="mono" aria-label="Mã kích hoạt"><button class="btn">Tham gia</button></form>`
   :mode==='in'?`<div><span class="tag g">Đã tham gia</span> <button class="btn b sm" data-act="enter" data-c="${c.id}">Vào học</button></div>`
   :mode==='guest'?`<button class="btn" data-act="gologin" style="margin-top:auto">Đăng nhập để tham gia</button>`
   :`<span class="mu sm">Xem trước giao diện học viên</span>`}</div></div>`;
 ACT.gologin=()=>{const i=document.querySelector('input[name=user]');if(i){i.scrollIntoView({block:'center'});i.focus()}};
+async function loadLN(){LN={};(await DB.list('lessons')).forEach(l=>LN[l.courseId]=(LN[l.courseId]||0)+1)}
 VIEWS.cat=async()=>{
+  await loadLN();
   const[cs,en]=await Promise.all([DB.list('courses'),DB.list('enroll')]),adm=S.user.role==='admin',mine=new Set(en.filter(e=>e.user===S.user.id).map(e=>e.courseId));
   $('#main').innerHTML=`<h1>${adm?'Trang quảng bá khóa học':'Khám phá khóa học'}</h1>${cs.length?`<div class="cg">${cs.map(c=>courseCard(c,adm?'adm':mine.has(c.id)?'in':'join')).join('')}</div>`:'<div class="card empty"><h3>Chưa có khóa học nào</h3><p class="mu">Các khóa học sẽ hiện ở đây khi quản trị viên tạo.</p></div>'}`;
 };
@@ -166,10 +172,10 @@ FORM.catjoin=async(f,d)=>{if(await redeem(d.code,f.dataset.c))go(S.v)};
 document.addEventListener('change',async e=>{const t=e.target;if(!t.dataset||!t.dataset.cid||!t.files[0])return;try{const c=(await DB.list('courses')).find(x=>x.id===t.dataset.cid);c.img=await resizeImg(t.files[0]);await DB.put('courses',c.id,c);toast('Đã đổi ảnh bìa');go('courses')}catch(err){toast('Không đổi được ảnh')}});
 /* ===== Mô-đun 2: Khóa học & mã kích hoạt 1 lần đa điều kiện ===== */
 VIEWS.courses=async()=>{
-  const cs=await DB.list('courses'),qs=await DB.list('questions');
+  const cs=await DB.list('courses'),qs=await DB.list('questions'),ls=await DB.list('lessons');
   $('#main').innerHTML=`<h1>Khóa học</h1><form class="card" data-f="course"><div class="fg"><div><label>Tên khóa học</label><input name="name" required></div><div><label>Mô tả</label><input name="desc"></div><div><label>Ảnh bìa (tải ảnh lên; để trống sẽ tự tạo ảnh mặc định)</label><input name="img" type="file" accept="image/*"></div></div>
   <div class="fg"><div><label>Số câu phần I (nhiều lựa chọn)</label><input name="n1" type="number" min="0" value="12"></div><div><label>Số câu phần II (đúng/sai)</label><input name="n2" type="number" min="0" value="4"></div><div><label>Số câu phần III (trả lời ngắn)</label><input name="n3" type="number" min="0" value="6"></div><div><label>Thời gian làm bài (phút)</label><input name="mins" type="number" min="1" value="50"></div></div><button class="btn">Tạo khóa học</button></form>
-  <div class="card">${cs.length?`<table><tr><th>Khóa học</th><th>Cấu trúc đề</th><th>Ngân hàng</th><th></th></tr>${cs.map(c=>{const n=p=>qs.filter(q=>q.courseId===c.id&&q.part===p).length;return`<tr><td><div style="display:flex;gap:10px;align-items:center"><div class="th">${cover(c)}</div><div><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)}</div><label class="btn o sm" style="display:inline-block;margin:4px 0 0;cursor:pointer;color:var(--tx)">Đổi ảnh<input type="file" accept="image/*" data-cid="${c.id}" hidden></label></div></div></td><td class="mono">${c.n1}/${c.n2}/${c.n3}, ${c.mins} phút</td><td class="mono">${n(1)}/${n(2)}/${n(3)}</td><td><button class="btn r sm" data-act="del" data-c="courses" data-i="${c.id}">Xóa</button></td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có khóa học nào.</p>'}</div>`;
+  <div class="card">${cs.length?`<table><tr><th>Khóa học</th><th>Đề tổng hợp</th><th>Ngân hàng</th><th></th></tr>${cs.map(c=>{const n=p=>qs.filter(q=>q.courseId===c.id&&q.part===p).length;return`<tr><td><div style="display:flex;gap:10px;align-items:center"><div class="th">${cover(c)}</div><div><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)}</div><label class="btn o sm" style="display:inline-block;margin:4px 0 0;cursor:pointer;color:var(--tx)">Đổi ảnh<input type="file" accept="image/*" data-cid="${c.id}" hidden></label></div></div></td><td class="mono">${c.n1}/${c.n2}/${c.n3}, ${c.mins} phút</td><td class="mono">${n(1)}/${n(2)}/${n(3)}</td><td style="white-space:nowrap"><button class="btn b sm" data-act="lof" data-c="${c.id}">Bài học (${ls.filter(l=>l.courseId===c.id).length})</button> <button class="btn r sm" data-act="del" data-c="courses" data-i="${c.id}">Xóa</button></td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có khóa học nào.</p>'}</div>`;
 };
 FORM.course=async(f,d)=>{const id=uid();let img='';if(d.img&&d.img.size){try{img=await resizeImg(d.img)}catch(e){return toast('Không đọc được ảnh')}}await DB.put('courses',id,{name:d.name.trim(),desc:d.desc.trim(),img,n1:+d.n1,n2:+d.n2,n3:+d.n3,mins:+d.mins});toast('Đã tạo khóa học');go('courses')};
 
@@ -207,22 +213,68 @@ function parseAns(p,v){
 VIEWS.bank=async()=>{
   const cs=await DB.list('courses');
   if(!cs.length)return $('#main').innerHTML='<h1>Ngân hàng đề</h1>'+noCourse;
-  $('#main').innerHTML=`<h1>Ngân hàng đề</h1><div class="card"><label>Khóa học</label><select id="bc">${cOpts(cs)}</select></div>
-  <form class="card" data-f="q"><div class="fg"><div><label>Loại câu</label><select name="p"><option value="1">Phần I, nhiều lựa chọn</option><option value="2">Phần II, đúng/sai (4 ý)</option><option value="3">Phần III, trả lời ngắn</option></select></div>
+  $('#main').innerHTML=`<h1>Ngân hàng đề</h1><div class="card"><div class="fg"><div><label>Khóa học</label><select id="bc">${cOpts(cs)}</select></div><div><label>Bài học đang xem</label><select id="bl"></select></div></div></div>
+  <form class="card" data-f="q" id="qf"><input type="hidden" name="qid"><div class="fg"><div><label>Thuộc bài học</label><select name="lid" id="lid"></select></div><div><label>Loại câu</label><select name="p"><option value="1">Phần I, nhiều lựa chọn</option><option value="2">Phần II, đúng/sai (4 ý)</option><option value="3">Phần III, trả lời ngắn</option></select></div>
   <div><label>Đáp án: phần I là A–D, phần II là 4 ký tự Đ/S (ví dụ ĐSĐS), phần III là đáp số</label><input name="ans" required></div></div>
   <div style="margin-bottom:12px"><label>Nội dung câu hỏi</label><textarea name="text" required></textarea></div>
   <div class="fg">${[0,1,2,3].map(i=>`<div><label>${'ABCD'[i]}: lựa chọn (phần I) hoặc ý ${'abcd'[i]} (phần II)</label><input name="o${i}"></div>`).join('')}</div>
-  <div style="margin-bottom:12px"><label>Giải thích</label><textarea name="exp"></textarea></div><button class="btn">Thêm câu hỏi</button></form>
-  <details class="card"><summary><b>Nhập hàng loạt (JSON)</b></summary><p class="mu sm">Mảng các câu, mỗi câu: {"part":1,"text":"...","opts":["a","b","c","d"],"ans":"B","exp":"..."}. Đáp án viết theo cùng quy tắc ở trên.</p><textarea id="imp" class="mono" style="min-height:120px"></textarea><div style="margin-top:10px"><button class="btn b" data-act="imp">Nhập vào khóa học đang chọn</button></div></details><div id="ql"></div>`;
-  $('#bc').onchange=listQ;listQ();
+  <div style="margin-bottom:12px"><label>Giải thích</label><textarea name="exp"></textarea></div><div style="display:flex;gap:10px"><button class="btn" id="qsub">Thêm câu hỏi</button><button type="button" class="btn o" data-act="qreset">Hủy sửa</button></div></form>
+  <details class="card"><summary><b>Nhập hàng loạt (JSON)</b></summary><p class="mu sm">Các câu sẽ được nhập vào bài học đang xem ở trên. Mỗi câu: {"part":1,"text":"...","opts":["a","b","c","d"],"ans":"B","exp":"..."}. Đáp án viết theo cùng quy tắc ở trên.</p><textarea id="imp" class="mono" style="min-height:120px"></textarea><div style="margin-top:10px"><button class="btn b" data-act="imp">Nhập vào bài học đang xem</button></div></details><div id="ql"></div>`;
+  if(S.cid&&cs.some(c=>c.id===S.cid))$('#bc').value=S.cid;
+  $('#bc').onchange=()=>{S.cid=$('#bc').value;fillL('')};$('#bl').onchange=()=>{$('#lid').value=$('#bl').value;listQ()};
+  fillL(S.lid||'');S.lid='';
 };
-async function listQ(){
-  const c=$('#bc').value,qs=(await DB.list('questions')).filter(q=>q.courseId===c).sort((a,b)=>a.part-b.part||a.at-b.at);
-  $('#ql').innerHTML=`<div class="card">${qs.length?`<table>${qs.map(q=>`<tr><td><span class="tag">${PN[q.part]}</span></td><td>${esc(q.text.slice(0,140))}</td><td class="mono">${esc(fc(q))}</td><td><button class="btn r sm" data-act="del" data-c="questions" data-i="${q.id}">Xóa</button></td></tr>`).join('')}</table>`:'<p class="mu">Khóa học này chưa có câu hỏi nào.</p>'}</div>`;
+async function fillL(keep){
+  const ls=(await DB.list('lessons')).filter(l=>l.courseId===$('#bc').value).sort((a,b)=>a.order-b.order);
+  $('#bl').innerHTML='<option value="">(Chưa gán bài học)</option>'+ls.map(l=>`<option value="${l.id}">${esc(l.title)}</option>`).join('');
+  $('#lid').innerHTML=$('#bl').innerHTML;$('#bl').value=keep||'';$('#lid').value=keep||'';listQ();
 }
-const mkQ=(c,p,o)=>{const ans=parseAns(p,o.ans);if(ans===null||!o.text)return null;const opts=[0,1,2,3].map(i=>(o.opts||[])[i]||'');if(p<3&&opts.some(x=>!x))return null;return{courseId:c,part:p,text:String(o.text).trim(),opts:p<3?opts:[],ans,exp:o.exp||'',at:Date.now()}};
-FORM.q=async(f,d)=>{const q=mkQ($('#bc').value,+d.p,{text:d.text,ans:d.ans,exp:d.exp,opts:[d.o0,d.o1,d.o2,d.o3]});if(!q)return toast('Câu hỏi hoặc đáp án chưa hợp lệ, kiểm tra lại các ô lựa chọn và đáp án');await DB.put('questions',uid(),q);f.reset();toast('Đã thêm câu hỏi');listQ()};
-ACT.imp=async()=>{let a;try{a=JSON.parse($('#imp').value)}catch(e){return toast('JSON không hợp lệ')}let n=0;for(const[i,o]of a.entries()){const q=mkQ($('#bc').value,+o.part,o);if(q){q.at+=i;await DB.put('questions',uid(),q);n++}}toast(`Đã nhập ${n}/${a.length} câu`);$('#imp').value='';listQ()};
+async function listQ(){
+  const c=$('#bc').value,l=$('#bl').value,qs=(await DB.list('questions')).filter(q=>q.courseId===c&&(q.lessonId||'')===l).sort((a,b)=>a.part-b.part||a.at-b.at);
+  QC=Object.fromEntries(qs.map(q=>[q.id,q]));
+  $('#ql').innerHTML=`<div class="card"><div class="mu sm" style="margin-bottom:8px">${qs.length} câu hỏi ${l?'trong bài học này':'chưa gán bài học'}</div>${qs.length?`<table>${qs.map(q=>`<tr><td><span class="tag">${PN[q.part]}</span></td><td>${esc(q.text.slice(0,140))}</td><td class="mono">${esc(fc(q))}</td><td style="white-space:nowrap"><button class="btn o sm" data-act="qedit" data-i="${q.id}">Sửa</button> <button class="btn r sm" data-act="del" data-c="questions" data-i="${q.id}">Xóa</button></td></tr>`).join('')}</table>`:''}</div>`;
+}
+const ansStr=q=>q.part==1?'ABCD'[q.ans]:q.part==2?q.ans.map(v=>v?'Đ':'S').join(''):q.ans;
+const mkQ=(c,l,p,o)=>{const ans=parseAns(p,o.ans);if(ans===null||!o.text)return null;const opts=[0,1,2,3].map(i=>(o.opts||[])[i]||'');if(p<3&&opts.some(x=>!x))return null;return{courseId:c,lessonId:l||'',part:p,text:String(o.text).trim(),opts:p<3?opts:[],ans,exp:o.exp||'',at:Date.now()}};
+FORM.q=async(f,d)=>{const old=d.qid&&QC[d.qid],q=mkQ($('#bc').value,d.lid,+d.p,{text:d.text,ans:d.ans,exp:d.exp,opts:[d.o0,d.o1,d.o2,d.o3]});if(!q)return toast('Câu hỏi hoặc đáp án chưa hợp lệ, kiểm tra lại các ô lựa chọn và đáp án');if(old)q.at=old.at;await DB.put('questions',d.qid||uid(),q);ACT.qreset();toast(old?'Đã cập nhật câu hỏi':'Đã thêm câu hỏi');listQ()};
+ACT.qreset=()=>{const f=$('#qf');f.reset();f.elements.qid.value='';$('#qsub').textContent='Thêm câu hỏi';$('#lid').value=$('#bl').value};
+ACT.qedit=d=>{const q=QC[d.i],e=$('#qf').elements;e.qid.value=d.i;e.p.value=q.part;e.ans.value=ansStr(q);e.text.value=q.text;[0,1,2,3].forEach(i=>e['o'+i].value=q.opts[i]||'');e.exp.value=q.exp||'';$('#lid').value=q.lessonId||'';$('#qsub').textContent='Lưu thay đổi';$('#qf').scrollIntoView({block:'center'})};
+ACT.imp=async()=>{let a;try{a=JSON.parse($('#imp').value)}catch(e){return toast('JSON không hợp lệ')}if(!Array.isArray(a))return toast('JSON phải là một mảng câu hỏi');let n=0;for(const[i,o]of a.entries()){const q=mkQ($('#bc').value,$('#bl').value,+o.part,o);if(q){q.at+=i;await DB.put('questions',uid(),q);n++}}toast(`Đã nhập ${n}/${a.length} câu`);$('#imp').value='';listQ()};
+
+/* ---- Bài học trong khóa học (quản trị) ---- */
+ACT.lof=d=>{S.cid=d.c;go('lessons')};
+ACT.lq=d=>{S.cid=d.c;S.lid=d.l;go('bank')};
+VIEWS.lessons=async()=>{
+  const c=(await DB.list('courses')).find(x=>x.id===S.cid);if(!c)return go('courses');
+  const[ls,qs]=await Promise.all([DB.list('lessons'),DB.list('questions')]),mine=ls.filter(l=>l.courseId===c.id).sort((a,b)=>a.order-b.order);LC=Object.fromEntries(mine.map(l=>[l.id,l]));
+  $('#main').innerHTML=`<h1>Bài học: ${esc(c.name)}</h1><button class="btn o sm" data-act="go" data-v="courses" style="margin-bottom:14px">Quay lại danh sách khóa học</button>
+  <form class="card" data-f="lesson" id="lf"><input type="hidden" name="lid"><div class="fg"><div><label>Tên bài học</label><input name="title" required></div><div><label>Mô tả ngắn</label><input name="desc"></div><div><label>Thời gian làm bài tập (phút, 0 = không giới hạn)</label><input name="mins" type="number" min="0" value="0"></div><div><label>Liên kết tài liệu hoặc video (tùy chọn)</label><input name="link" type="url" placeholder="https://"></div></div>
+  <div style="margin-bottom:12px"><label>Nội dung bài học (học viên đọc trước khi làm bài tập)</label><textarea name="content" style="min-height:120px"></textarea></div>
+  <label style="display:flex;gap:8px;align-items:center;color:var(--tx);margin-bottom:12px"><input type="checkbox" name="shuf" style="width:auto"> Xáo trộn thứ tự câu hỏi mỗi lần làm (trong từng phần)</label>
+  <div style="display:flex;gap:10px"><button class="btn" id="lsub">Thêm bài học</button><button type="button" class="btn o" data-act="lreset">Hủy sửa</button></div></form>
+  <div class="card">${mine.length?`<table><tr><th>#</th><th>Bài học</th><th>Câu hỏi</th><th></th></tr>${mine.map((l,i)=>`<tr><td class="mono">${i+1}</td><td><b>${esc(l.title)}</b><div class="mu sm">${esc(l.desc)}</div></td><td class="mono">${qs.filter(q=>q.lessonId===l.id).length}</td><td style="white-space:nowrap"><button class="btn o sm" data-act="lmv" data-i="${l.id}" data-d="-1" ${i?'':'disabled'}>Lên</button> <button class="btn o sm" data-act="lmv" data-i="${l.id}" data-d="1" ${i<mine.length-1?'':'disabled'}>Xuống</button> <button class="btn b sm" data-act="lq" data-c="${c.id}" data-l="${l.id}">Soạn câu hỏi</button> <button class="btn o sm" data-act="ledit" data-i="${l.id}">Sửa</button> <button class="btn r sm" data-act="del" data-c="lessons" data-i="${l.id}">Xóa</button></td></tr>`).join('')}</table>`:'<p class="mu">Khóa học này chưa có bài học nào. Hãy tạo bài học đầu tiên ở trên.</p>'}</div>`;
+};
+FORM.lesson=async(f,d)=>{const ls=(await DB.list('lessons')).filter(l=>l.courseId===S.cid),old=d.lid&&LC[d.lid];await DB.put('lessons',d.lid||uid(),{courseId:S.cid,title:d.title.trim(),desc:d.desc.trim(),content:d.content.trim(),link:d.link.trim(),mins:+d.mins||0,shuf:!!d.shuf,order:old?old.order:Math.max(0,...ls.map(l=>l.order||0))+1});toast(old?'Đã cập nhật bài học':'Đã thêm bài học');go('lessons')};
+ACT.ledit=d=>{const l=LC[d.i],e=$('#lf').elements;e.lid.value=l.id;e.title.value=l.title;e.desc.value=l.desc||'';e.mins.value=l.mins||0;e.link.value=l.link||'';e.content.value=l.content||'';e.shuf.checked=!!l.shuf;$('#lsub').textContent='Lưu thay đổi';$('#lf').scrollIntoView({block:'center'})};
+ACT.lreset=()=>{$('#lf').reset();$('#lf').elements.lid.value='';$('#lsub').textContent='Thêm bài học'};
+ACT.lmv=async d=>{const ls=Object.values(LC).sort((a,b)=>a.order-b.order),i=ls.findIndex(l=>l.id===d.i),j=i+ +d.d;if(j<0||j>=ls.length)return;const a=ls[i],b=ls[j],t=a.order;a.order=b.order;b.order=t;await DB.put('lessons',a.id,a);await DB.put('lessons',b.id,b);go('lessons')};
+
+/* ---- Trang khóa học của học viên: danh sách bài học ---- */
+ACT.open=d=>{S.cid=d.c;go('course')};
+ACT.enter=async d=>{const ls=(await DB.list('lessons')).filter(l=>l.courseId===d.c);if(ls.length){S.cid=d.c;return go('course')}const a=(await DB.list('attempts')).find(x=>x.user===S.user.id&&x.courseId===d.c&&x.status==='doing'&&!x.lessonId);if(a)exam(a);else ACT.start(d)};
+VIEWS.course=async()=>{
+  const[cs,ls,qs,at,en]=await Promise.all(['courses','lessons','questions','attempts','enroll'].map(x=>DB.list(x))),c=cs.find(x=>x.id===S.cid);
+  if(!c||!en.some(e=>e.id===S.user.id+'_'+c.id))return go('cat');
+  const mine=ls.filter(l=>l.courseId===c.id).sort((a,b)=>a.order-b.order),my=at.filter(a=>a.user===S.user.id&&a.courseId===c.id),total=qs.filter(q=>q.courseId===c.id).length;
+  const lessonCard=(l,i)=>{const nq=qs.filter(q=>q.lessonId===l.id).length,m=my.filter(a=>a.lessonId===l.id),done=m.filter(a=>a.status==='done'),doing=m.find(a=>a.status==='doing'),best=done.length?Math.max(...done.map(a=>a.score)):null,lk=l.link&&/^https?:\/\//.test(l.link);
+    return`<div class="card"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><span class="mono mu sm">Bài ${i+1}</span><h3 style="margin:2px 0">${esc(l.title)}</h3><div class="mu sm">${esc(l.desc)}</div></div><div>${done.length?'<span class="tag g">Đã hoàn thành</span>':doing?'<span class="tag a">Đang làm dở</span>':''}</div></div>
+    ${l.content||lk?`<details style="margin:10px 0"><summary><b>Nội dung bài học</b></summary><div class="qt" style="font-size:15px;margin-top:8px">${esc(l.content||'')}</div>${lk?`<a class="btn o sm" style="display:inline-block;text-decoration:none" href="${esc(l.link)}" target="_blank" rel="noopener">Mở tài liệu hoặc video</a>`:''}</details>`:''}
+    <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">${nq?(doing?`<button class="btn b" data-act="resume" data-a="${doing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}" data-l="${l.id}">Làm bài tập (${nq} câu${l.mins?', '+l.mins+' phút':''})</button>`):'<span class="mu sm">Bài này chưa có bài tập</span>'}${best!=null?`<span class="mono sm">Điểm cao nhất ${best}/10</span>`:''}</div></div>`};
+  const gdoing=my.find(a=>a.status==='doing'&&!a.lessonId);
+  $('#main').innerHTML=`<button class="btn o sm" data-act="go" data-v="cat">Quay lại các khóa học</button><div style="display:flex;gap:16px;align-items:center;margin:14px 0 18px;flex-wrap:wrap"><div class="th" style="width:140px">${cover(c)}</div><div><h1 style="margin:0">${esc(c.name)}</h1><div class="mu">${esc(c.desc)}</div></div></div>
+  <h3>Bài học</h3>${mine.length?mine.map(lessonCard).join(''):'<p class="mu">Khóa học chưa có bài học nào.</p>'}
+  ${total&&c.n1+c.n2+c.n3?`<h3 style="margin-top:22px">Ôn tập tổng hợp</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Đề tổng hợp</b><div class="mu sm">Rút ngẫu nhiên ${c.n1+c.n2+c.n3} câu từ toàn bộ ngân hàng của khóa học, ${c.mins} phút.</div></div>${gdoing?`<button class="btn b" data-act="resume" data-a="${gdoing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Làm đề tổng hợp</button>`}</div>`:''}`;
+};
 
 /* ---- Làm bài: giao diện một trang, đổi câu không tải lại, không cuộn nhảy ---- */
 const norm=s=>String(s||'').trim().toLowerCase().replace(',','.').replace(/\s/g,'');
@@ -231,16 +283,17 @@ const isAns=(q,a)=>q.part==1?a!=null:q.part==2?!!a&&a.some(v=>v!=null):!!norm(a)
 const fa=(q,a)=>a==null?'chưa trả lời':q.part==1?'ABCD'[a]:q.part==2?a.map((v,i)=>'abcd'[i]+':'+(v==null?'-':v?'Đ':'S')).join(' '):a;
 const fc=q=>q.part==1?'ABCD'[q.ans]:q.part==2?q.ans.map((v,i)=>'abcd'[i]+':'+(v?'Đ':'S')).join(' '):q.ans;
 ACT.start=async d=>{
-  const c=(await DB.list('courses')).find(x=>x.id===d.c),all=await DB.list('questions'),qs=[];
-  [1,2,3].forEach(p=>qs.push(...shuffle(all.filter(q=>q.courseId===c.id&&q.part===p)).slice(0,c['n'+p])));
-  if(!qs.length)return toast('Khóa học chưa có câu hỏi');
-  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,courseName:c.name,start:Date.now(),mins:c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,updated:Date.now()};
+  const c=(await DB.list('courses')).find(x=>x.id===d.c),all=await DB.list('questions'),qs=[];let l=null;
+  if(d.l){l=(await DB.list('lessons')).find(x=>x.id===d.l);[1,2,3].forEach(p=>{const g=all.filter(q=>q.lessonId===l.id&&q.part===p).sort((a,b)=>a.at-b.at);qs.push(...(l.shuf?shuffle(g):g))})}
+  else[1,2,3].forEach(p=>qs.push(...shuffle(all.filter(q=>q.courseId===c.id&&q.part===p)).slice(0,c['n'+p])));
+  if(!qs.length)return toast(l?'Bài học chưa có câu hỏi':'Khóa học chưa có câu hỏi');
+  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,updated:Date.now()};
   await DB.put('attempts',A.id,A);exam(A);
 };
 ACT.enter=async d=>{const a=(await DB.list('attempts')).find(x=>x.user===S.user.id&&x.courseId===d.c&&x.status==='doing');if(a)exam(a);else ACT.start(d)};
 ACT.resume=async d=>exam((await DB.list('attempts')).find(a=>a.id===d.a));
 function exam(A){
-  S.off&&S.off();const qs=A.qs;
+  S.off&&S.off();S.cid=A.courseId;const qs=A.qs;
   $('#main').innerHTML=`<div class="exam"><div class="card" id="qp"></div><div class="card side"><div class="timer" id="tm"></div><div class="pal" id="pal"></div><div style="display:flex;gap:8px"><button class="btn o" data-act="xexit">Lưu và thoát</button><button class="btn" data-act="xsubmit">Nộp bài</button></div></div></div>`;
   const save=()=>{A.updated=Date.now();A.answered=qs.filter(q=>isAns(q,A.ans[q.id])).length;return DB.put('attempts',A.id,A)};
   const pal=()=>$('#pal')&&($('#pal').innerHTML=qs.map((q,i)=>`<button class="${isAns(q,A.ans[q.id])?'ans':''} ${i==A.cur?'cur':''}" data-act="xgo" data-i="${i}">${i+1}</button>`).join(''));
@@ -249,13 +302,13 @@ function exam(A){
     else if(q.part==2)b=q.opts.map((o,i)=>`<div class="tf"><span><b>${'abcd'[i]})</b> ${esc(o)}</span><span><button class="opt ${a&&a[i]===true?'on':''}" data-act="xt" data-i="${i}" data-v="1">Đúng</button><button class="opt ${a&&a[i]===false?'on':''}" data-act="xt" data-i="${i}" data-v="0">Sai</button></span></div>`).join('');
     else b=`<input id="sa" value="${esc(a||'')}" placeholder="Nhập đáp số" autocomplete="off">`;
     $('#qp').innerHTML=`<div class="mu">${PN[q.part]}, câu ${A.cur+1}/${qs.length}</div><div class="qt">${esc(q.text)}</div>${b}<div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn o" data-act="xgo" data-i="${A.cur-1}" ${A.cur?'':'disabled'}>Câu trước</button><button class="btn o" data-act="xgo" data-i="${A.cur+1}" ${A.cur<qs.length-1?'':'disabled'}>Câu sau</button></div>`;pal()};
-  const tick=()=>{const left=A.start+A.mins*60000-Date.now();if($('#tm'))$('#tm').textContent=mmss(left);if(left<=0){toast('Hết giờ, hệ thống tự nộp bài');submit()}};
+  const tick=()=>{if(!A.mins){const t=$('#tm');if(t){t.textContent='Không giới hạn';t.style.fontSize='18px'}return}const left=A.start+A.mins*60000-Date.now();if($('#tm'))$('#tm').textContent=mmss(left);if(left<=0){toast('Hết giờ, hệ thống tự nộp bài');submit()}};
   const iv=[setInterval(tick,1000),setInterval(save,10000)];
   const submit=async()=>{X.stop();const sum=qs.reduce((s,q)=>s+grade(q,A.ans[q.id]),0);A.status='done';A.score=Math.round(sum/qs.length*1000)/100;A.end=Date.now();await save();X=null;result(A)};
   X={stop:()=>iv.forEach(clearInterval),
     set:(v)=>{A.ans[qs[A.cur].id]=v;save();draw()},
     go:i=>{if(i>=0&&i<qs.length){A.cur=i;draw()}},submit,
-    exit:async()=>{await save();go('cat')},
+    exit:async()=>{await save();go(A.lessonId?'course':'cat')},
     sa:v=>{A.ans[qs[A.cur].id]=v;save();pal()},
     tf:(i,v)=>{const q=qs[A.cur],r=(A.ans[q.id]||[null,null,null,null]).slice();r[i]=v;X.set(r)}};
   draw();tick();
@@ -274,7 +327,7 @@ VIEWS.my=async()=>{
   const[en,cs,at]=await Promise.all([DB.list('enroll'),DB.list('courses'),DB.list('attempts')]);
   const mine=en.filter(e=>e.user===S.user.id).map(e=>cs.find(c=>c.id===e.courseId)).filter(Boolean),doing=at.filter(a=>a.user===S.user.id&&a.status==='doing');
   $('#main').innerHTML=`<h1>Khóa học của tôi</h1><form class="card" data-f="redeem" style="display:flex;gap:10px;align-items:end"><div style="flex:1"><label>Mã kích hoạt</label><input name="code" required placeholder="XXXX-XXXX" class="mono"></div><button class="btn">Kích hoạt</button></form>
-  ${mine.length?mine.map(c=>{const d=doing.find(a=>a.courseId===c.id);return`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)} Đề ${c.n1}/${c.n2}/${c.n3} câu, ${c.mins} phút.</div></div>${d?`<button class="btn b" data-act="resume" data-a="${d.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Bắt đầu làm bài</button>`}</div>`}).join(''):'<div class="card empty"><h3>Bạn chưa có khóa học nào</h3><p class="mu">Nhập mã kích hoạt do quản trị viên cấp để mở khóa học.</p></div>'}`;
+  ${mine.length?mine.map(c=>{const d=doing.find(a=>a.courseId===c.id);return`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)} Đề ${c.n1}/${c.n2}/${c.n3} câu, ${c.mins} phút.</div></div><button class="btn" data-act="enter" data-c="${c.id}">Vào học</button></div>`}).join(''):'<div class="card empty"><h3>Bạn chưa có khóa học nào</h3><p class="mu">Nhập mã kích hoạt do quản trị viên cấp để mở khóa học.</p></div>'}`;
 };
 VIEWS.hist=async()=>{
   const at=(await DB.list('attempts')).filter(a=>a.user===S.user.id&&a.status==='done').sort((a,b)=>b.end-a.end);
@@ -288,7 +341,7 @@ VIEWS.live=()=>{
     const avg=done.length?(done.reduce((s,a)=>s+a.score,0)/done.length).toFixed(2):'-';
     const byC={};done.forEach(a=>(byC[a.courseName]=byC[a.courseName]||[]).push(a.score));
     el.innerHTML=`<div class="stats">${[['Đang làm bài',live.length],['Tổng lượt làm',data.length],['Đã nộp',done.length],['Điểm trung bình',avg]].map(([a,b])=>`<div class="card st"><div class="n">${b}</div>${a}</div>`).join('')}</div>
-    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/a.qs.length*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.qs.length}</span></td><td class="mono">${a.status==='done'?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
+    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/a.qs.length*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.qs.length}</span></td><td class="mono">${a.status==='done'||!a.mins?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
     ${Object.keys(byC).length?`<div class="card"><h3>Điểm trung bình theo khóa học</h3>${Object.entries(byC).map(([n,s])=>{const m=s.reduce((x,y)=>x+y,0)/s.length;return`<div style="margin-bottom:10px"><div class="sm">${esc(n)}: <b class="mono">${m.toFixed(2)}</b> (${s.length} bài)</div><div class="bar"><i style="width:${m*10}%;background:var(--b)"></i></div></div>`}).join('')}</div>`:''}`};
   const u=DB.watch('attempts',d=>{data=d;draw()}),t=setInterval(draw,5000);S.off=()=>{u();clearInterval(t)};
 };
@@ -301,7 +354,7 @@ VIEWS.users=async()=>{
 };
 FORM.user=async(f,d)=>{const id=d.user.trim().toLowerCase();if((await DB.list('users')).some(u=>u.id===id))return toast('Tên đăng nhập đã tồn tại');await DB.put('users',id,{id,name:d.name.trim(),role:d.role,hash:await sha(id+':'+d.pw)});toast('Đã tạo tài khoản');go('users')};
 VIEWS.set=()=>{
-  $('#main').innerHTML=`<h1>Cài đặt</h1><div class="card"><b>Nơi lưu dữ liệu hiện tại:</b> ${MODE}<div style="margin-top:10px">${badge()} <button class="btn o sm" data-act="ping">Kiểm tra kết nối</button></div></div>
+  $('#main').innerHTML=`<h1>Cài đặt</h1><div class="card"><b>Nơi lưu dữ liệu hiện tại:</b> ${MODE}<div style="margin-top:10px">${badge()} <span class="sm">${PID?'Đã đồng bộ cloud: '+esc(PID):'Chưa đồng bộ, đang dùng chế độ cục bộ'}</span> <button class="btn o sm" data-act="ping">Kiểm tra kết nối</button></div></div>
   ${localStorage.getItem('edp_fbcfg')?`<div class="card"><h3>Cho học viên dùng chung cloud</h3><p class="mu sm">Cấu hình vừa dán chỉ nằm trong trình duyệt của bạn nên máy học viên chưa thấy. Mở <code>index.html</code>, thay dòng <code>const EMBEDDED_CFG=null;</code> bằng dòng dưới, rồi đưa lại lên GitHub.</p><textarea readonly class="mono" onclick="this.select()">const EMBEDDED_CFG=${esc(localStorage.getItem('edp_fbcfg'))};</textarea></div>`:''}<form class="card" data-f="fb"><h3>Kết nối Firebase Cloud Firestore</h3><p class="mu sm">Dán đối tượng firebaseConfig (JSON) lấy từ Firebase Console. Sau khi lưu, trang tải lại và dùng Firestore với các collection: users, courses, codes, questions, enroll, attempts. Dữ liệu đang lưu cục bộ không tự chuyển sang Firestore.</p>
   <textarea name="cfg" class="mono" style="min-height:140px" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><div style="display:flex;gap:10px;margin-top:12px"><button class="btn">Lưu và kết nối</button><button type="button" class="btn o" data-act="fboff">Quay về chế độ cục bộ</button></div></form>
   <div class="card mu sm">Lưu ý bảo mật: đăng nhập chạy phía trình duyệt nên chỉ phù hợp để ôn tập nội bộ. Khi triển khai thật, hãy đặt Firestore Security Rules hoặc chuyển sang Firebase Authentication.</div>`;
