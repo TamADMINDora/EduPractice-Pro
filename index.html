@@ -60,6 +60,7 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 .cc .bd{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}.cc h3{margin:0;font-size:17px}
 .cc .jf{display:flex;gap:8px;margin-top:auto}.cc .jf input{min-width:0}
 .th{width:96px;flex:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--ln)}
+.opt.ok2{border-color:var(--g);background:rgba(16,185,129,.16);font-weight:700}.opt.bad2{border-color:var(--r);background:rgba(220,38,38,.12)}.opt:disabled{cursor:default}
 @media(max-width:800px){.app{grid-template-columns:1fr}aside{position:static;height:auto}nav{flex-direction:row;flex-wrap:wrap}.exam{grid-template-columns:1fr}.side{position:static}main{padding:16px}}
 .sync{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--g);flex:none}.sync.off{background:var(--a)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.55)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
@@ -91,13 +92,14 @@ async function fsInit(cfg){
 }
 let DB=LS,MODE='Lưu cục bộ trong trình duyệt',PID='';
 /* Dán cấu hình Firebase (dạng JSON) thay cho null để MỌI người mở web đều tự liên kết cloud. Lấy sẵn dòng này trong Cài đặt. */
-const EMBEDDED_CFG={"apiKey":"AIzaSyDprku7v6AVcUq9cM871HbrZOGNnJZqmeY","authDomain":"edulearn-677c5.firebaseapp.com","projectId":"edulearn-677c5","storageBucket":"edulearn-677c5.firebasestorage.app","messagingSenderId":"559238512834","appId":"1:559238512834:web:06141c945fb82345197b5b","measurementId":"G-5312JR7T95"}
+const EMBEDDED_CFG={"apiKey":"AIzaSyDprku7v6AVcUq9cM871HbrZOGNnJZqmeY","authDomain":"edulearn-677c5.firebaseapp.com","projectId":"edulearn-677c5","storageBucket":"edulearn-677c5.firebasestorage.app","messagingSenderId":"559238512834","appId":"1:559238512834:web:06141c945fb82345197b5b","measurementId":"G-5312JR7T95"};
 const badge=()=>PID?`<span class="sync" role="img" title="Đã đồng bộ cloud: ${esc(PID)}" aria-label="Đã đồng bộ cloud"></span>`:`<span class="sync off" role="img" title="Chưa đồng bộ cloud (chế độ cục bộ)" aria-label="Chưa đồng bộ cloud"></span>`;
 const S={user:null,v:'',off:null};let X=null;
-const ACT={},FORM={},VIEWS={};let LN={},QC={},LC={};
+const ACT={},FORM={},VIEWS={};let LN={},QC={},LC={},PR=null;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&ACT[b.dataset.act])ACT[b.dataset.act](b.dataset,b)});
 document.addEventListener('submit',e=>{const f=e.target.closest('form[data-f]');if(!f)return;e.preventDefault();FORM[f.dataset.f](f,Object.fromEntries(new FormData(f)))});
-document.addEventListener('input',e=>{if(e.target.id==='sa')ACT.sa(e.target.value)});
+document.addEventListener('input',e=>{if(e.target.id==='sa')ACT.sa(e.target.value);if(e.target.id==='pa'&&PR)PR.ans[PR.qs[PR.i].id]=e.target.value});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='pa')ACT.prc()});
 
 /* ---- Giao diện sáng/tối ---- */
 const theme=t=>{document.documentElement.dataset.t=t;localStorage.setItem('edp_theme',t)};
@@ -119,18 +121,20 @@ async function loginView(){
   <form class="card" data-f="${first?'setup':'login'}">${first?'<div style="margin-bottom:12px"><label>Họ tên</label><input name="name" required></div>':''}
   <div style="margin-bottom:12px"><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+" autocomplete="username"></div>
   <div style="margin-bottom:16px"><label>Mật khẩu</label><input name="pw" type="password" required minlength="6" autocomplete="current-password"></div>
-  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form></div><div id="sc"></div>`;if(!first)showCase();
+  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form>${first?'':'<p class="mu sm">Hệ thống ghi nhận địa chỉ IP khi học viên đăng nhập và làm bài để phòng việc làm bài hộ.</p>'}</div><div id="sc"></div>`;if(!first)showCase();
 }
-async function enter(u){S.user=u;sessionStorage.setItem('edp_sess',u.id);shell()}
+async function getIP(){if(S.ip)return S.ip;try{const c=new AbortController();setTimeout(()=>c.abort(),4000);const r=await fetch('https://api.ipify.org?format=json',{signal:c.signal});S.ip=(await r.json()).ip||'không xác định'}catch(e){S.ip='không xác định'}return S.ip}
+async function logLogin(u){try{await DB.put('logins',uid(),{user:u.id,name:u.name,ip:await getIP(),ua:navigator.userAgent.slice(0,160),at:Date.now()})}catch(e){}}
+async function enter(u){S.user=u;sessionStorage.setItem('edp_sess',u.id);if(u.role!=='admin')logLogin(u);shell()}
 FORM.setup=async(f,d)=>{const id=d.user.trim().toLowerCase();const u={id,name:d.name.trim(),role:'admin',hash:await sha(id+':'+d.pw)};await DB.put('users',id,u);enter(u)};
 FORM.login=async(f,d)=>{const id=d.user.trim().toLowerCase(),u=(await DB.list('users')).find(x=>x.id===id);if(!u||u.hash!==await sha(id+':'+d.pw))return toast('Sai tên đăng nhập hoặc mật khẩu');enter(u)};
 ACT.out=()=>{X&&X.stop&&X.stop();X=null;S.off&&S.off();sessionStorage.removeItem('edp_sess');S.user=null;loginView()};
 
 function shell(){
   const adm=S.user.role==='admin';
-  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
+  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
   document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
-  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 4</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 5</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
   go(adm?'home':'cat');
 }
 const showErr=e=>{const c=String(e&&(e.code||e.message)||'lỗi không rõ');if($('#main'))$('#main').innerHTML=`<div class="card bad"><h3>Không tải được trang này</h3><p>Chi tiết: <code>${esc(c)}</code></p>${/permission|insufficient/i.test(c)?'<p>Firestore Rules đang chặn việc đọc hoặc ghi dữ liệu. Hãy cập nhật Rules để có thêm collection <code>lessons</code>, rồi bấm Publish và tải lại trang.</p>':''}</div>`};
@@ -272,11 +276,11 @@ VIEWS.course=async()=>{
   const lessonCard=(l,i)=>{const nq=qs.filter(q=>q.lessonId===l.id).length,m=my.filter(a=>a.lessonId===l.id),done=m.filter(a=>a.status==='done'),doing=m.find(a=>a.status==='doing'),best=done.length?Math.max(...done.map(a=>a.score)):null,lk=l.link&&/^https?:\/\//.test(l.link);
     return`<div class="card"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><span class="mono mu sm">Bài ${i+1}</span><h3 style="margin:2px 0">${esc(l.title)}</h3><div class="mu sm">${esc(l.desc)}</div></div><div>${done.length?'<span class="tag g">Đã hoàn thành</span>':doing?'<span class="tag a">Đang làm dở</span>':''}</div></div>
     ${l.content||lk?`<details style="margin:10px 0"><summary><b>Nội dung bài học</b></summary><div class="qt" style="font-size:15px;margin-top:8px">${esc(l.content||'')}</div>${lk?`<a class="btn o sm" style="display:inline-block;text-decoration:none" href="${esc(l.link)}" target="_blank" rel="noopener">Mở tài liệu hoặc video</a>`:''}</details>`:''}
-    <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">${nq?(doing?`<button class="btn b" data-act="resume" data-a="${doing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}" data-l="${l.id}">Làm bài tập (${nq} câu${l.mins?', '+l.mins+' phút':''})</button>`):'<span class="mu sm">Bài này chưa có bài tập</span>'}${best!=null?`<span class="mono sm">Điểm cao nhất ${best}/10</span>`:''}</div></div>`};
+    <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">${nq?(doing?`<button class="btn b" data-act="resume" data-a="${doing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}" data-l="${l.id}">Làm bài tập (${nq} câu${l.mins?', '+l.mins+' phút':''})</button>`):'<span class="mu sm">Bài này chưa có bài tập</span>'}${nq?`<button class="btn o" data-act="prac" data-c="${c.id}" data-l="${l.id}">Luyện tập (xem đáp án ngay)</button>`:''}${best!=null?`<span class="mono sm">Điểm cao nhất ${best}/10</span>`:''}</div></div>`};
   const gdoing=my.find(a=>a.status==='doing'&&!a.lessonId);
   $('#main').innerHTML=`<button class="btn o sm" data-act="go" data-v="cat">Quay lại các khóa học</button><div style="display:flex;gap:16px;align-items:center;margin:14px 0 18px;flex-wrap:wrap"><div class="th" style="width:140px">${cover(c)}</div><div><h1 style="margin:0">${esc(c.name)}</h1><div class="mu">${esc(c.desc)}</div></div></div>
   <h3>Bài học</h3>${mine.length?mine.map(lessonCard).join(''):'<p class="mu">Khóa học chưa có bài học nào.</p>'}
-  ${total&&c.n1+c.n2+c.n3?`<h3 style="margin-top:22px">Ôn tập tổng hợp</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Đề tổng hợp</b><div class="mu sm">Rút ngẫu nhiên ${c.n1+c.n2+c.n3} câu từ toàn bộ ngân hàng của khóa học, ${c.mins} phút.</div></div>${gdoing?`<button class="btn b" data-act="resume" data-a="${gdoing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Làm đề tổng hợp</button>`}</div>`:''}`;
+  ${total&&c.n1+c.n2+c.n3?`<h3 style="margin-top:22px">Ôn tập tổng hợp</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Đề tổng hợp</b><div class="mu sm">Rút ngẫu nhiên ${c.n1+c.n2+c.n3} câu từ toàn bộ ngân hàng của khóa học, ${c.mins} phút.</div></div>${gdoing?`<button class="btn b" data-act="resume" data-a="${gdoing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Làm đề tổng hợp</button>`}<button class="btn o" data-act="prac" data-c="${c.id}">Luyện tập toàn bộ câu hỏi</button></div>`:''}`;
 };
 
 /* ---- Làm bài: giao diện một trang, đổi câu không tải lại, không cuộn nhảy ---- */
@@ -290,7 +294,7 @@ ACT.start=async d=>{
   if(d.l){l=(await DB.list('lessons')).find(x=>x.id===d.l);[1,2,3].forEach(p=>{const g=all.filter(q=>q.lessonId===l.id&&q.part===p).sort((a,b)=>a.at-b.at);qs.push(...(l.shuf?shuffle(g):g))})}
   else[1,2,3].forEach(p=>qs.push(...shuffle(all.filter(q=>q.courseId===c.id&&q.part===p)).slice(0,c['n'+p])));
   if(!qs.length)return toast(l?'Bài học chưa có câu hỏi':'Khóa học chưa có câu hỏi');
-  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,updated:Date.now()};
+  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,ip:await getIP(),updated:Date.now()};
   await DB.put('attempts',A.id,A);exam(A);
 };
 ACT.resume=async d=>exam((await DB.list('attempts')).find(a=>a.id===d.a));
@@ -324,6 +328,53 @@ function result(A){
 }
 ACT.view=async d=>result((await DB.list('attempts')).find(a=>a.id===d.a));
 
+/* ---- Chế độ luyện tập: chọn xong là hiện đáp án và giải thích ngay ---- */
+ACT.prac=async d=>{
+  const all=await DB.list('questions');let qs;
+  if(d.l){const l=(await DB.list('lessons')).find(x=>x.id===d.l);qs=[1,2,3].flatMap(p=>{const g=all.filter(q=>q.lessonId===l.id&&q.part===p).sort((a,b)=>a.at-b.at);return l.shuf?shuffle(g):g})}
+  else qs=shuffle(all.filter(q=>q.courseId===d.c));
+  if(!qs.length)return toast('Chưa có câu hỏi để luyện tập');
+  S.cid=d.c;PR={qs,i:0,ans:{},done:{},fin:false};practice();
+};
+function practice(){
+  const n=PR.qs.length;
+  if(PR.fin){const dn=PR.qs.filter(x=>PR.done[x.id]),ok=dn.filter(x=>grade(x,PR.ans[x.id])==1).length;
+    $('#main').innerHTML=`<h1>Hoàn thành luyện tập</h1><div class="card"><div class="mono" style="font-size:36px;color:var(--g)">${ok}/${n}</div><p class="mu">Bạn đã kiểm tra ${dn.length}/${n} câu và đúng hoàn toàn ${ok} câu.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-act="prr">Luyện lại (xáo trộn)</button><button class="btn o" data-act="prx">Quay lại khóa học</button></div></div>`;return}
+  const q=PR.qs[PR.i],a=PR.ans[q.id],ck=!!PR.done[q.id],right=PR.qs.filter(x=>PR.done[x.id]&&grade(x,PR.ans[x.id])==1).length,dis=ck?'disabled':'';
+  let b='';
+  if(q.part==1)b=q.opts.map((o,i)=>`<button class="opt ${ck?(i===q.ans?'ok2':a===i?'bad2':''):(a===i?'on':'')}" data-act="pro" data-i="${i}" ${dis}><b>${'ABCD'[i]}</b>${esc(o)}</button>`).join('');
+  else if(q.part==2){const cl=(i,val)=>{const v=a&&a[i];return ck?(q.ans[i]===val?'ok2':v===val?'bad2':''):(v===val?'on':'')};
+    b=q.opts.map((o,i)=>`<div class="tf"><span><b>${'abcd'[i]})</b> ${esc(o)}</span><span><button class="opt ${cl(i,true)}" data-act="prt" data-i="${i}" data-v="1" ${dis}>Đúng</button><button class="opt ${cl(i,false)}" data-act="prt" data-i="${i}" data-v="0" ${dis}>Sai</button></span></div>`).join('')+(ck?'':'<button class="btn" data-act="prc" style="margin-top:8px">Kiểm tra</button>')}
+  else b=`<input id="pa" value="${esc(a||'')}" placeholder="Nhập đáp số" autocomplete="off" ${dis}>`+(ck?'':'<button class="btn" data-act="prc" style="margin-top:10px">Kiểm tra</button>');
+  const g=ck?grade(q,a):0;
+  $('#main').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><h1 style="margin:0">Luyện tập</h1><button class="btn o sm" data-act="prx">Thoát</button></div>
+  <div class="bar" style="margin-bottom:6px"><i style="width:${(PR.i+1)/n*100}%"></i></div><div class="mu sm" style="margin-bottom:12px">Câu ${PR.i+1}/${n}, đã đúng ${right}</div>
+  <div class="card"><div class="mu sm">${PN[q.part]}</div><div class="qt">${esc(q.text)}</div>${b}
+  ${ck?`<div class="card ${g==1?'ok':'bad'}" style="margin:14px 0 0"><b>${g==1?'Chính xác':'Chưa đúng'}</b><p class="sm" style="margin:6px 0">Đáp án đúng: <b>${esc(fc(q))}</b></p>${q.exp?`<p class="sm mu" style="margin:0">${esc(q.exp)}</p>`:''}</div>`:''}
+  <div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn o" data-act="prp" ${PR.i?'':'disabled'}>Câu trước</button><button class="btn ${ck?'':'o'}" data-act="prn">${PR.i<n-1?'Câu sau':'Hoàn thành'}</button></div></div>`;
+}
+ACT.pro=d=>{const q=PR.qs[PR.i];if(PR.done[q.id])return;PR.ans[q.id]=+d.i;PR.done[q.id]=true;practice()};
+ACT.prt=d=>{const q=PR.qs[PR.i];if(PR.done[q.id])return;const r=(PR.ans[q.id]||[null,null,null,null]).slice();r[+d.i]=d.v==='1';PR.ans[q.id]=r;if(r.every(v=>v!=null))PR.done[q.id]=true;practice()};
+ACT.prc=()=>{const q=PR.qs[PR.i];if(PR.done[q.id])return;if(!isAns(q,PR.ans[q.id]))return toast('Hãy chọn hoặc nhập đáp án trước khi kiểm tra');PR.done[q.id]=true;practice()};
+ACT.prn=()=>{if(PR.i<PR.qs.length-1)PR.i++;else PR.fin=true;practice()};
+ACT.prp=()=>{if(PR.i>0)PR.i--;practice()};
+ACT.prr=()=>{PR={qs:shuffle(PR.qs),i:0,ans:{},done:{},fin:false};practice()};
+ACT.prx=()=>{PR=null;go('course')};
+
+/* ---- Nhật ký đăng nhập và IP (quản trị) ---- */
+VIEWS.ips=async()=>{
+  const[lg,us]=await Promise.all([DB.list('logins'),DB.list('users')]),by={};
+  lg.forEach(l=>(by[l.user]=by[l.user]||[]).push(l));
+  const rows=Object.entries(by).map(([u,a])=>{a.sort((x,y)=>x.at-y.at);
+    const ips24=new Set(a.filter(l=>Date.now()-l.at<864e5).map(l=>l.ip)),all=new Set(a.map(l=>l.ip)),per={};
+    let close=false;for(let i=1;i<a.length;i++)if(a[i].ip!==a[i-1].ip&&a[i].at-a[i-1].at<6e5)close=true;
+    a.forEach(l=>{const o=per[l.ip]=per[l.ip]||{n:0,t:0};o.n++;o.t=Math.max(o.t,l.at)});
+    return{u,name:(us.find(x=>x.id===u)||{}).name||u,n:a.length,all,ips24,last:a[a.length-1],close,per,flag:close||ips24.size>=3}
+  }).sort((x,y)=>y.flag-x.flag||y.last.at-x.last.at);
+  $('#main').innerHTML=`<h1>Nhật ký đăng nhập</h1><div class="card mu sm">Mỗi lần học viên đăng nhập, web ghi lại địa chỉ IP. Cảnh báo xuất hiện khi một tài khoản đăng nhập từ 2 IP khác nhau trong vòng 10 phút, hoặc từ 3 IP trở lên trong 24 giờ. IP chỉ là dấu hiệu để bạn xem xét, không phải bằng chứng: học viên dùng chung wifi của trường hoặc ký túc xá sẽ có cùng IP, còn dùng 4G hoặc mạng khác thì IP đổi.</div>
+  <div class="card">${rows.length?`<table><tr><th>Học viên</th><th>Số lần</th><th>Số IP</th><th>Lần gần nhất</th><th>Cảnh báo</th><th>Chi tiết IP</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b><div class="id mu">${esc(r.u)}</div></td><td class="mono">${r.n}</td><td class="mono">${r.all.size}</td><td class="sm">${new Date(r.last.at).toLocaleString('vi-VN')}<div class="mono mu">${esc(r.last.ip)}</div></td><td>${r.close?'<span class="tag r">2 IP trong 10 phút</span> ':''}${r.ips24.size>=3?'<span class="tag a">3 IP trở lên trong 24 giờ</span>':''}${r.flag?'':'<span class="mu sm">Bình thường</span>'}</td><td><details><summary class="sm">Xem</summary>${Object.entries(r.per).map(([ip,o])=>`<div class="mono sm">${esc(ip)}: ${o.n} lần, gần nhất ${new Date(o.t).toLocaleString('vi-VN')}</div>`).join('')}</details></td></tr>`).join('')}</table>`:'<p class="mu">Chưa có lượt đăng nhập nào của học viên được ghi lại.</p>'}</div>`;
+};
+
 /* ---- Khu vực học viên ---- */
 VIEWS.my=async()=>{
   const[en,cs,at]=await Promise.all([DB.list('enroll'),DB.list('courses'),DB.list('attempts')]);
@@ -343,7 +394,7 @@ VIEWS.live=()=>{
     const avg=done.length?(done.reduce((s,a)=>s+a.score,0)/done.length).toFixed(2):'-';
     const byC={};done.forEach(a=>(byC[a.courseName]=byC[a.courseName]||[]).push(a.score));
     el.innerHTML=`<div class="stats">${[['Đang làm bài',live.length],['Tổng lượt làm',data.length],['Đã nộp',done.length],['Điểm trung bình',avg]].map(([a,b])=>`<div class="card st"><div class="n">${b}</div>${a}</div>`).join('')}</div>
-    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/a.qs.length*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.qs.length}</span></td><td class="mono">${a.status==='done'||!a.mins?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
+    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th><th>IP</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/a.qs.length*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.qs.length}</span></td><td class="mono">${a.status==='done'||!a.mins?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td><td class="mono sm">${esc(a.ip||'-')}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
     ${Object.keys(byC).length?`<div class="card"><h3>Điểm trung bình theo khóa học</h3>${Object.entries(byC).map(([n,s])=>{const m=s.reduce((x,y)=>x+y,0)/s.length;return`<div style="margin-bottom:10px"><div class="sm">${esc(n)}: <b class="mono">${m.toFixed(2)}</b> (${s.length} bài)</div><div class="bar"><i style="width:${m*10}%;background:var(--b)"></i></div></div>`}).join('')}</div>`:''}`};
   const u=DB.watch('attempts',d=>{data=d;draw()}),t=setInterval(draw,5000);S.off=()=>{u();clearInterval(t)};
 };
