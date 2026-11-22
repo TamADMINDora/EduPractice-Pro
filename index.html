@@ -53,6 +53,12 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:8px;z-index:9;font-weight:500}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--g);margin-right:6px}
 .dot.a{background:var(--a)}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.cc{background:var(--sf);border:1px solid var(--ln);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.cc .im{aspect-ratio:16/9;background:var(--ln)}.cc .im img,.cc .im svg,.th img,.th svg{width:100%;height:100%;object-fit:cover;display:block}
+.cc .bd{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}.cc h3{margin:0;font-size:17px}
+.cc .jf{display:flex;gap:8px;margin-top:auto}.cc .jf input{min-width:0}
+.th{width:96px;flex:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--ln)}
 @media(max-width:800px){.app{grid-template-columns:1fr}aside{position:static;height:auto}nav{flex-direction:row;flex-wrap:wrap}.exam{grid-template-columns:1fr}.side{position:static}main{padding:16px}}
 @media(prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
 </style>
@@ -103,13 +109,14 @@ async function boot(){
   if(me){const u=(await DB.list('users')).find(x=>x.id===me);if(u){S.user=u;return shell()}}
   loginView();
 }
+async function showCase(){const cs=await DB.list('courses');if(!cs.length||!$('#sc'))return;$('#sc').innerHTML=`<div style="max-width:1100px;margin:30px auto 0;padding:0 16px 40px"><h2 style="margin:0 0 14px">Các khóa học đang mở</h2><div class="cg">${cs.map(c=>courseCard(c,'guest')).join('')}</div></div>`}
 async function loginView(){
   const first=!(await DB.list('users')).length;
   document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px">EduPractice <span>Pro</span></div><div style="margin-bottom:10px">${badge()}</div><p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
   <form class="card" data-f="${first?'setup':'login'}">${first?'<div style="margin-bottom:12px"><label>Họ tên</label><input name="name" required></div>':''}
   <div style="margin-bottom:12px"><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+" autocomplete="username"></div>
   <div style="margin-bottom:16px"><label>Mật khẩu</label><input name="pw" type="password" required minlength="6" autocomplete="current-password"></div>
-  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form></div>`;
+  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form></div><div id="sc"></div>`;if(!first)showCase();
 }
 async function enter(u){S.user=u;sessionStorage.setItem('edp_sess',u.id);shell()}
 FORM.setup=async(f,d)=>{const id=d.user.trim().toLowerCase();const u={id,name:d.name.trim(),role:'admin',hash:await sha(id+':'+d.pw)};await DB.put('users',id,u);enter(u)};
@@ -118,10 +125,10 @@ ACT.out=()=>{X&&X.stop&&X.stop();X=null;S.off&&S.off();sessionStorage.removeItem
 
 function shell(){
   const adm=S.user.role==='admin';
-  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['users','Người dùng'],['set','Cài đặt']]:[['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
+  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
   document.body.innerHTML=`<div class="app"><aside><div class="brand">EduPractice <span>Pro</span></div><div>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
   <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
-  go(adm?'home':'my');
+  go(adm?'home':'cat');
 }
 function go(v){
   S.off&&S.off();S.off=null;if(X){X.stop();X=null}
@@ -142,14 +149,29 @@ VIEWS.home=async()=>{
   <div class="card"><b>Nơi lưu dữ liệu:</b> ${MODE}. <a style="color:var(--b);cursor:pointer" data-act="go" data-v="set">Mở Cài đặt</a> để kết nối Cloud Firestore.</div>`;
 };
 
+const resizeImg=f=>new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const i=new Image();i.onerror=no;i.onload=()=>{const W=640,H=360,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),k=Math.max(W/i.width,H/i.height),w=i.width*k,h=i.height*k;x.drawImage(i,(W-w)/2,(H-h)/2,w,h);ok(c.toDataURL('image/jpeg',.78))};i.src=r.result};r.readAsDataURL(f)});
+const cover=c=>{if(c.img)return`<img src="${esc(c.img)}" alt="">`;let h=0;for(const ch of c.name)h=(h*31+ch.charCodeAt(0))>>>0;const C=['#10B981','#0284C7','#F59E0B'],a=C[h%3],b=C[((h>>3)%3==h%3)?(h%3+1)%3:(h>>3)%3],ini=c.name.trim().split(/\s+/).slice(-2).map(w=>w[0]).join('').toUpperCase(),cx=100+h%400,cy=60+h%240;
+return`<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="360" fill="url(#g${h})"/>${[40,80,120,160,200,240].map(r=>`<ellipse cx="${cx}" cy="${cy}" rx="${r*1.6}" ry="${r}" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2"/>`).join('')}<text x="40" y="320" font-family="JetBrains Mono,monospace" font-size="64" font-weight="600" fill="#fff" fill-opacity=".9">${esc(ini)}</text></svg>`};
+const courseCard=(c,mode)=>`<div class="cc"><div class="im">${cover(c)}</div><div class="bd"><h3>${esc(c.name)}</h3><div class="mu sm">${esc(c.desc)}</div><div class="mono mu sm">Đề ${c.n1+c.n2+c.n3} câu, ${c.mins} phút</div>${
+  mode==='join'?`<form class="jf" data-f="catjoin" data-c="${c.id}"><input name="code" required placeholder="Nhập mã kích hoạt" class="mono" aria-label="Mã kích hoạt"><button class="btn">Tham gia</button></form>`
+  :mode==='in'?`<div><span class="tag g">Đã tham gia</span> <button class="btn b sm" data-act="go" data-v="my">Vào học</button></div>`
+  :mode==='guest'?`<button class="btn" data-act="gologin" style="margin-top:auto">Đăng nhập để tham gia</button>`
+  :`<span class="mu sm">Xem trước giao diện học viên</span>`}</div></div>`;
+ACT.gologin=()=>{const i=document.querySelector('input[name=user]');if(i){i.scrollIntoView({block:'center'});i.focus()}};
+VIEWS.cat=async()=>{
+  const[cs,en]=await Promise.all([DB.list('courses'),DB.list('enroll')]),adm=S.user.role==='admin',mine=new Set(en.filter(e=>e.user===S.user.id).map(e=>e.courseId));
+  $('#main').innerHTML=`<h1>${adm?'Trang quảng bá khóa học':'Khám phá khóa học'}</h1>${cs.length?`<div class="cg">${cs.map(c=>courseCard(c,adm?'adm':mine.has(c.id)?'in':'join')).join('')}</div>`:'<div class="card empty"><h3>Chưa có khóa học nào</h3><p class="mu">Các khóa học sẽ hiện ở đây khi quản trị viên tạo.</p></div>'}`;
+};
+FORM.catjoin=async(f,d)=>{if(await redeem(d.code,f.dataset.c))go(S.v)};
+document.addEventListener('change',async e=>{const t=e.target;if(!t.dataset||!t.dataset.cid||!t.files[0])return;try{const c=(await DB.list('courses')).find(x=>x.id===t.dataset.cid);c.img=await resizeImg(t.files[0]);await DB.put('courses',c.id,c);toast('Đã đổi ảnh bìa');go('courses')}catch(err){toast('Không đổi được ảnh')}});
 /* ===== Mô-đun 2: Khóa học & mã kích hoạt 1 lần đa điều kiện ===== */
 VIEWS.courses=async()=>{
   const cs=await DB.list('courses'),qs=await DB.list('questions');
-  $('#main').innerHTML=`<h1>Khóa học</h1><form class="card" data-f="course"><div class="fg"><div><label>Tên khóa học</label><input name="name" required></div><div><label>Mô tả</label><input name="desc"></div></div>
+  $('#main').innerHTML=`<h1>Khóa học</h1><form class="card" data-f="course"><div class="fg"><div><label>Tên khóa học</label><input name="name" required></div><div><label>Mô tả</label><input name="desc"></div><div><label>Ảnh bìa (tải ảnh lên; để trống sẽ tự tạo ảnh mặc định)</label><input name="img" type="file" accept="image/*"></div></div>
   <div class="fg"><div><label>Số câu phần I (nhiều lựa chọn)</label><input name="n1" type="number" min="0" value="12"></div><div><label>Số câu phần II (đúng/sai)</label><input name="n2" type="number" min="0" value="4"></div><div><label>Số câu phần III (trả lời ngắn)</label><input name="n3" type="number" min="0" value="6"></div><div><label>Thời gian làm bài (phút)</label><input name="mins" type="number" min="1" value="50"></div></div><button class="btn">Tạo khóa học</button></form>
-  <div class="card">${cs.length?`<table><tr><th>Khóa học</th><th>Cấu trúc đề</th><th>Ngân hàng</th><th></th></tr>${cs.map(c=>{const n=p=>qs.filter(q=>q.courseId===c.id&&q.part===p).length;return`<tr><td><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)}</div></td><td class="mono">${c.n1}/${c.n2}/${c.n3}, ${c.mins} phút</td><td class="mono">${n(1)}/${n(2)}/${n(3)}</td><td><button class="btn r sm" data-act="del" data-c="courses" data-i="${c.id}">Xóa</button></td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có khóa học nào.</p>'}</div>`;
+  <div class="card">${cs.length?`<table><tr><th>Khóa học</th><th>Cấu trúc đề</th><th>Ngân hàng</th><th></th></tr>${cs.map(c=>{const n=p=>qs.filter(q=>q.courseId===c.id&&q.part===p).length;return`<tr><td><div style="display:flex;gap:10px;align-items:center"><div class="th">${cover(c)}</div><div><b>${esc(c.name)}</b><div class="mu sm">${esc(c.desc)}</div><label class="btn o sm" style="display:inline-block;margin:4px 0 0;cursor:pointer;color:var(--tx)">Đổi ảnh<input type="file" accept="image/*" data-cid="${c.id}" hidden></label></div></div></td><td class="mono">${c.n1}/${c.n2}/${c.n3}, ${c.mins} phút</td><td class="mono">${n(1)}/${n(2)}/${n(3)}</td><td><button class="btn r sm" data-act="del" data-c="courses" data-i="${c.id}">Xóa</button></td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có khóa học nào.</p>'}</div>`;
 };
-FORM.course=async(f,d)=>{const id=uid();await DB.put('courses',id,{name:d.name.trim(),desc:d.desc.trim(),n1:+d.n1,n2:+d.n2,n3:+d.n3,mins:+d.mins});toast('Đã tạo khóa học');go('courses')};
+FORM.course=async(f,d)=>{const id=uid();let img='';if(d.img&&d.img.size){try{img=await resizeImg(d.img)}catch(e){return toast('Không đọc được ảnh')}}await DB.put('courses',id,{name:d.name.trim(),desc:d.desc.trim(),img,n1:+d.n1,n2:+d.n2,n3:+d.n3,mins:+d.mins});toast('Đã tạo khóa học');go('courses')};
 
 const genCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';crypto.getRandomValues(new Uint8Array(8)).forEach(n=>s+=A[n%A.length]);return s.slice(0,4)+'-'+s.slice(4)};
 VIEWS.codes=async()=>{
@@ -160,17 +182,19 @@ VIEWS.codes=async()=>{
   <div class="card">${ks.length?`<table><tr><th>Mã</th><th>Khóa học</th><th>Điều kiện</th><th>Trạng thái</th><th></th></tr>${ks.map(k=>{const ex=k.exp&&new Date(k.exp+'T23:59:59')<Date.now();return`<tr><td class="id">${k.id}</td><td>${cn(k.courseId)}</td><td class="sm">${k.exp?'đến '+k.exp:'không hạn'}${k.bound?', dành cho '+esc(k.bound):''}</td><td>${k.usedBy?`<span class="tag b">${esc(k.usedBy)} đã dùng</span>`:ex?'<span class="tag r">Hết hạn</span>':'<span class="tag g">Chưa dùng</span>'}</td><td><button class="btn r sm" data-act="del" data-c="codes" data-i="${k.id}">Xóa</button></td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có mã nào.</p>'}</div>`;
 };
 FORM.code=async(f,d)=>{for(let i=0;i<Math.min(100,+d.qty||1);i++){const id=genCode();await DB.put('codes',id,{courseId:d.c,exp:d.exp,bound:d.bound.trim().toLowerCase(),usedBy:'',usedAt:0,at:Date.now()+i})}toast('Đã tạo mã');go('codes')};
-FORM.redeem=async(f,d)=>{
-  const id=d.code.trim().toUpperCase(),k=(await DB.list('codes')).find(x=>x.id===id);
+async function redeem(raw,cid){
+  const id=raw.trim().toUpperCase(),k=(await DB.list('codes')).find(x=>x.id===id);
   if(!k)return toast('Mã không tồn tại');
+  if(cid&&k.courseId!==cid)return toast('Mã này không thuộc khóa học này');
   if(k.usedBy)return toast('Mã này đã được sử dụng');
   if(k.exp&&new Date(k.exp+'T23:59:59')<Date.now())return toast('Mã đã hết hạn');
   if(k.bound&&k.bound!==S.user.id)return toast('Mã này được cấp cho tài khoản khác');
   const eid=S.user.id+'_'+k.courseId;
   if((await DB.list('enroll')).some(e=>e.id===eid))return toast('Bạn đã có khóa học này');
   await DB.put('enroll',eid,{user:S.user.id,courseId:k.courseId,at:Date.now()});
-  await DB.put('codes',id,{...k,usedBy:S.user.id,usedAt:Date.now()});toast('Kích hoạt thành công');go('my');
-};
+  await DB.put('codes',id,{...k,usedBy:S.user.id,usedAt:Date.now()});toast('Kích hoạt thành công');return true;
+}
+FORM.redeem=async(f,d)=>{if(await redeem(d.code))go('my')};
 
 /* ===== Mô-đun 3: Ngân hàng đề 3 phần ===== */
 const PN=['','Phần I, nhiều lựa chọn','Phần II, đúng/sai','Phần III, trả lời ngắn'];
