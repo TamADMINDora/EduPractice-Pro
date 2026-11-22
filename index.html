@@ -154,7 +154,7 @@ const cover=c=>{if(c.img)return`<img src="${esc(c.img)}" alt="">`;let h=0;for(co
 return`<svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="360" fill="url(#g${h})"/>${[40,80,120,160,200,240].map(r=>`<ellipse cx="${cx}" cy="${cy}" rx="${r*1.6}" ry="${r}" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2"/>`).join('')}<text x="40" y="320" font-family="JetBrains Mono,monospace" font-size="64" font-weight="600" fill="#fff" fill-opacity=".9">${esc(ini)}</text></svg>`};
 const courseCard=(c,mode)=>`<div class="cc"><div class="im">${cover(c)}</div><div class="bd"><h3>${esc(c.name)}</h3><div class="mu sm">${esc(c.desc)}</div><div class="mono mu sm">Đề ${c.n1+c.n2+c.n3} câu, ${c.mins} phút</div>${
   mode==='join'?`<form class="jf" data-f="catjoin" data-c="${c.id}"><input name="code" required placeholder="Nhập mã kích hoạt" class="mono" aria-label="Mã kích hoạt"><button class="btn">Tham gia</button></form>`
-  :mode==='in'?`<div><span class="tag g">Đã tham gia</span> <button class="btn b sm" data-act="go" data-v="my">Vào học</button></div>`
+  :mode==='in'?`<div><span class="tag g">Đã tham gia</span> <button class="btn b sm" data-act="enter" data-c="${c.id}">Vào học</button></div>`
   :mode==='guest'?`<button class="btn" data-act="gologin" style="margin-top:auto">Đăng nhập để tham gia</button>`
   :`<span class="mu sm">Xem trước giao diện học viên</span>`}</div></div>`;
 ACT.gologin=()=>{const i=document.querySelector('input[name=user]');if(i){i.scrollIntoView({block:'center'});i.focus()}};
@@ -237,6 +237,7 @@ ACT.start=async d=>{
   const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,courseName:c.name,start:Date.now(),mins:c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,updated:Date.now()};
   await DB.put('attempts',A.id,A);exam(A);
 };
+ACT.enter=async d=>{const a=(await DB.list('attempts')).find(x=>x.user===S.user.id&&x.courseId===d.c&&x.status==='doing');if(a)exam(a);else ACT.start(d)};
 ACT.resume=async d=>exam((await DB.list('attempts')).find(a=>a.id===d.a));
 function exam(A){
   S.off&&S.off();const qs=A.qs;
@@ -254,7 +255,7 @@ function exam(A){
   X={stop:()=>iv.forEach(clearInterval),
     set:(v)=>{A.ans[qs[A.cur].id]=v;save();draw()},
     go:i=>{if(i>=0&&i<qs.length){A.cur=i;draw()}},submit,
-    exit:async()=>{await save();go('my')},
+    exit:async()=>{await save();go('cat')},
     sa:v=>{A.ans[qs[A.cur].id]=v;save();pal()},
     tf:(i,v)=>{const q=qs[A.cur],r=(A.ans[q.id]||[null,null,null,null]).slice();r[i]=v;X.set(r)}};
   draw();tick();
