@@ -81,6 +81,8 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 /* ---- Lớp dữ liệu: cùng một giao diện cho localStorage và Firestore ---- */
 const LS={
   async list(c){return Object.values(JSON.parse(localStorage.getItem('edp_'+c)||'{}'))},
+  async get(c,id){return JSON.parse(localStorage.getItem('edp_'+c)||'{}')[id]||null},
+  watchOne(c,id,cb){const f=()=>LS.get(c,id).then(cb);f();const t=setInterval(f,2000);return()=>clearInterval(t)},
   async put(c,id,o){const m=JSON.parse(localStorage.getItem('edp_'+c)||'{}');m[id]={...o,id};localStorage.setItem('edp_'+c,JSON.stringify(m))},
   async del(c,id){const m=JSON.parse(localStorage.getItem('edp_'+c)||'{}');delete m[id];localStorage.setItem('edp_'+c,JSON.stringify(m))},
   watch(c,cb){const f=()=>LS.list(c).then(cb);f();const t=setInterval(f,2000);return()=>clearInterval(t)}
@@ -88,7 +90,7 @@ const LS={
 async function fsInit(cfg){
   const V='10.12.2',a=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),f=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
   const db=f.getFirestore(a.initializeApp(cfg)),L=s=>s.docs.map(d=>({...d.data(),id:d.id}));
-  return{list:async c=>L(await f.getDocs(f.collection(db,c))),put:(c,id,o)=>f.setDoc(f.doc(db,c,id),{...o,id}),del:(c,id)=>f.deleteDoc(f.doc(db,c,id)),watch:(c,cb)=>f.onSnapshot(f.collection(db,c),s=>cb(L(s)))};
+  return{get:async(c,id)=>{const d=await f.getDoc(f.doc(db,c,id));return d.exists()?d.data():null},watchOne:(c,id,cb)=>f.onSnapshot(f.doc(db,c,id),d=>cb(d.exists()?d.data():null)),list:async c=>L(await f.getDocs(f.collection(db,c))),put:(c,id,o)=>f.setDoc(f.doc(db,c,id),{...o,id}),del:(c,id)=>f.deleteDoc(f.doc(db,c,id)),watch:(c,cb)=>f.onSnapshot(f.collection(db,c),s=>cb(L(s)))};
 }
 let DB=LS,MODE='Lưu cục bộ trong trình duyệt',PID='';
 /* Dán cấu hình Firebase (dạng JSON) thay cho null để MỌI người mở web đều tự liên kết cloud. Lấy sẵn dòng này trong Cài đặt. */
@@ -111,30 +113,42 @@ async function boot(){
   const cfg=localStorage.getItem('edp_fbcfg')||(EMBEDDED_CFG&&JSON.stringify(EMBEDDED_CFG));
   if(cfg){try{const c=JSON.parse(cfg),d=await fsInit(c);await Promise.race([d.list('users'),new Promise((_,r)=>setTimeout(()=>r(new Error('quá thời gian chờ')),8000))]);DB=d;PID=c.projectId;MODE='Firebase Cloud Firestore'}catch(e){toast('Không liên kết được cloud ('+(e.code||e.message)+'), đang dùng chế độ cục bộ')}}
   const me=sessionStorage.getItem('edp_sess');
-  if(me){const u=(await DB.list('users')).find(x=>x.id===me);if(u){S.user=u;return shell()}}
+  if(me){const u=(await DB.list('users')).find(x=>x.id===me);if(u){S.user=u;
+    if(u.role!=='admin'){S.sid=sessionStorage.getItem('edp_sid');let bad=!S.sid;try{const d=await DB.get('sessions',u.id);if(d&&d.sid!==S.sid)bad=true}catch(e){}
+      if(bad){S.user=null;sessionStorage.removeItem('edp_sess');return loginView('Tài khoản này đang được dùng ở thiết bị khác hoặc phiên đã hết hạn. Hãy đăng nhập lại.')}}
+    shell();guard();return}}
   loginView();
 }
 async function showCase(){await loadLN();const cs=await DB.list('courses');if(!cs.length||!$('#sc'))return;$('#sc').innerHTML=`<div style="max-width:1100px;margin:30px auto 0;padding:0 16px 40px"><h2 style="margin:0 0 14px">Các khóa học đang mở</h2><div class="cg">${cs.map(c=>courseCard(c,'guest')).join('')}</div></div>`}
-async function loginView(){
+async function loginView(msg){
   const first=!(await DB.list('users')).length;
-  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px;display:flex;align-items:center;gap:12px">EduPractice <span>Pro</span>${badge()}</div><p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
+  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px;display:flex;align-items:center;gap:12px">EduPractice <span>Pro</span>${badge()}</div>${msg?`<div class="card bad" style="padding:12px">${esc(msg)}</div>`:''}<p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
   <form class="card" data-f="${first?'setup':'login'}">${first?'<div style="margin-bottom:12px"><label>Họ tên</label><input name="name" required></div>':''}
   <div style="margin-bottom:12px"><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+" autocomplete="username"></div>
   <div style="margin-bottom:16px"><label>Mật khẩu</label><input name="pw" type="password" required minlength="6" autocomplete="current-password"></div>
-  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form>${first?'':'<p class="mu sm">Hệ thống ghi nhận địa chỉ IP khi học viên đăng nhập và làm bài để phòng việc làm bài hộ.</p>'}</div><div id="sc"></div>`;if(!first)showCase();
+  <button class="btn" style="width:100%">${first?'Tạo quản trị viên':'Đăng nhập'}</button></form>${first?'':'<p class="mu sm">Hệ thống ghi nhận địa chỉ IP khi học viên đăng nhập và làm bài để phòng việc làm bài hộ. Mỗi tài khoản học viên chỉ dùng được trên một thiết bị tại một thời điểm.</p>'}</div><div id="sc"></div>`;if(!first)showCase();
 }
 async function getIP(){if(S.ip)return S.ip;try{const c=new AbortController();setTimeout(()=>c.abort(),4000);const r=await fetch('https://api.ipify.org?format=json',{signal:c.signal});S.ip=(await r.json()).ip||'không xác định'}catch(e){S.ip='không xác định'}return S.ip}
-async function logLogin(u){try{await DB.put('logins',uid(),{user:u.id,name:u.name,ip:await getIP(),ua:navigator.userAgent.slice(0,160),at:Date.now()})}catch(e){}}
-async function enter(u){S.user=u;sessionStorage.setItem('edp_sess',u.id);if(u.role!=='admin')logLogin(u);shell()}
+async function logLogin(u,kick){try{await DB.put('logins',uid(),{user:u.id,name:u.name,ip:await getIP(),ua:navigator.userAgent.slice(0,160),at:Date.now(),kick:!!kick})}catch(e){}}
+async function enter(u){
+  S.user=u;sessionStorage.setItem('edp_sess',u.id);
+  if(u.role!=='admin'){S.sid=uid();sessionStorage.setItem('edp_sid',S.sid);let kick=false;
+    try{const prev=await DB.get('sessions',u.id),ip=await getIP();kick=!!(prev&&prev.ip!==ip&&Date.now()-prev.at<72e5);
+      await DB.put('sessions',u.id,{user:u.id,sid:S.sid,ip,ua:navigator.userAgent.slice(0,160),at:Date.now()})}
+    catch(e){toast('Chưa bật được giới hạn 1 thiết bị, hãy báo quản trị viên kiểm tra Firestore Rules')}
+    logLogin(u,kick)}
+  shell();guard();
+}
+function guard(){if(S.user.role==='admin')return;S.gOff&&S.gOff();try{S.gOff=DB.watchOne('sessions',S.user.id,d=>{if(d&&S.sid&&d.sid!==S.sid)ACT.out('Tài khoản này vừa được đăng nhập ở thiết bị khác, nên phiên này đã bị đăng xuất. Bài làm dở (nếu có) vẫn được lưu để làm tiếp.')})}catch(e){}}
 FORM.setup=async(f,d)=>{const id=d.user.trim().toLowerCase();const u={id,name:d.name.trim(),role:'admin',hash:await sha(id+':'+d.pw)};await DB.put('users',id,u);enter(u)};
 FORM.login=async(f,d)=>{const id=d.user.trim().toLowerCase(),u=(await DB.list('users')).find(x=>x.id===id);if(!u||u.hash!==await sha(id+':'+d.pw))return toast('Sai tên đăng nhập hoặc mật khẩu');enter(u)};
-ACT.out=()=>{X&&X.stop&&X.stop();X=null;S.off&&S.off();sessionStorage.removeItem('edp_sess');S.user=null;loginView()};
+ACT.out=m=>{X&&X.stop&&X.stop();X=null;PR=null;S.off&&S.off();S.gOff&&S.gOff();S.gOff=null;sessionStorage.removeItem('edp_sess');sessionStorage.removeItem('edp_sid');S.user=null;loginView(typeof m==='string'?m:'')};
 
 function shell(){
   const adm=S.user.role==='admin';
   const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
   document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
-  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 5</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 6</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
   go(adm?'home':'cat');
 }
 const showErr=e=>{const c=String(e&&(e.code||e.message)||'lỗi không rõ');if($('#main'))$('#main').innerHTML=`<div class="card bad"><h3>Không tải được trang này</h3><p>Chi tiết: <code>${esc(c)}</code></p>${/permission|insufficient/i.test(c)?'<p>Firestore Rules đang chặn việc đọc hoặc ghi dữ liệu. Hãy cập nhật Rules để có thêm collection <code>lessons</code>, rồi bấm Publish và tải lại trang.</p>':''}</div>`};
@@ -369,10 +383,10 @@ VIEWS.ips=async()=>{
     const ips24=new Set(a.filter(l=>Date.now()-l.at<864e5).map(l=>l.ip)),all=new Set(a.map(l=>l.ip)),per={};
     let close=false;for(let i=1;i<a.length;i++)if(a[i].ip!==a[i-1].ip&&a[i].at-a[i-1].at<6e5)close=true;
     a.forEach(l=>{const o=per[l.ip]=per[l.ip]||{n:0,t:0};o.n++;o.t=Math.max(o.t,l.at)});
-    return{u,name:(us.find(x=>x.id===u)||{}).name||u,n:a.length,all,ips24,last:a[a.length-1],close,per,flag:close||ips24.size>=3}
+    return{u,name:(us.find(x=>x.id===u)||{}).name||u,n:a.length,all,ips24,last:a[a.length-1],close,per,kicks:a.filter(l=>l.kick).length,flag:close||ips24.size>=3||a.filter(l=>l.kick).length>=2}
   }).sort((x,y)=>y.flag-x.flag||y.last.at-x.last.at);
   $('#main').innerHTML=`<h1>Nhật ký đăng nhập</h1><div class="card mu sm">Mỗi lần học viên đăng nhập, web ghi lại địa chỉ IP. Cảnh báo xuất hiện khi một tài khoản đăng nhập từ 2 IP khác nhau trong vòng 10 phút, hoặc từ 3 IP trở lên trong 24 giờ. IP chỉ là dấu hiệu để bạn xem xét, không phải bằng chứng: học viên dùng chung wifi của trường hoặc ký túc xá sẽ có cùng IP, còn dùng 4G hoặc mạng khác thì IP đổi.</div>
-  <div class="card">${rows.length?`<table><tr><th>Học viên</th><th>Số lần</th><th>Số IP</th><th>Lần gần nhất</th><th>Cảnh báo</th><th>Chi tiết IP</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b><div class="id mu">${esc(r.u)}</div></td><td class="mono">${r.n}</td><td class="mono">${r.all.size}</td><td class="sm">${new Date(r.last.at).toLocaleString('vi-VN')}<div class="mono mu">${esc(r.last.ip)}</div></td><td>${r.close?'<span class="tag r">2 IP trong 10 phút</span> ':''}${r.ips24.size>=3?'<span class="tag a">3 IP trở lên trong 24 giờ</span>':''}${r.flag?'':'<span class="mu sm">Bình thường</span>'}</td><td><details><summary class="sm">Xem</summary>${Object.entries(r.per).map(([ip,o])=>`<div class="mono sm">${esc(ip)}: ${o.n} lần, gần nhất ${new Date(o.t).toLocaleString('vi-VN')}</div>`).join('')}</details></td></tr>`).join('')}</table>`:'<p class="mu">Chưa có lượt đăng nhập nào của học viên được ghi lại.</p>'}</div>`;
+  <div class="card">${rows.length?`<table><tr><th>Học viên</th><th>Số lần</th><th>Số IP</th><th>Lần gần nhất</th><th>Cảnh báo</th><th>Chi tiết IP</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b><div class="id mu">${esc(r.u)}</div></td><td class="mono">${r.n}</td><td class="mono">${r.all.size}</td><td class="sm">${new Date(r.last.at).toLocaleString('vi-VN')}<div class="mono mu">${esc(r.last.ip)}</div></td><td>${r.close?'<span class="tag r">2 IP trong 10 phút</span> ':''}${r.ips24.size>=3?'<span class="tag a">3 IP trở lên trong 24 giờ</span> ':''}${r.kicks>=2?`<span class="tag a">Đẩy thiết bị khác ra ${r.kicks} lần</span>`:''}${r.flag?'':'<span class="mu sm">Bình thường</span>'}</td><td><details><summary class="sm">Xem</summary>${Object.entries(r.per).map(([ip,o])=>`<div class="mono sm">${esc(ip)}: ${o.n} lần, gần nhất ${new Date(o.t).toLocaleString('vi-VN')}</div>`).join('')}</details></td></tr>`).join('')}</table>`:'<p class="mu">Chưa có lượt đăng nhập nào của học viên được ghi lại.</p>'}</div>`;
 };
 
 /* ---- Khu vực học viên ---- */
