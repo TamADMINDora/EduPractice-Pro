@@ -6,12 +6,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>EduPractice Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F8FAFC;--sf:#fff;--tx:#0F172A;--mu:#64748B;--ln:#E2E8F0;--g:#10B981;--b:#0284C7;--a:#F59E0B;--r:#DC2626;--grid:rgba(2,132,199,.07);color-scheme:light}
 :root[data-t=dark]{--bg:#0F172A;--sf:#162036;--tx:#E2E8F0;--mu:#94A3B8;--ln:#27344d;--grid:rgba(56,189,248,.08);color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;color:var(--tx);background:var(--bg) linear-gradient(var(--grid) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/32px 32px;min-height:100vh}
+body{margin:0;font:15px/1.55 var(--ff,'Plus Jakarta Sans'),system-ui,sans-serif;color:var(--tx);background:var(--bg) linear-gradient(var(--grid) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/32px 32px;min-height:100vh}
 h1{font-size:24px;margin:0 0 18px;font-weight:800}h3{margin:0 0 8px}
 .mono,code,.id{font-family:'JetBrains Mono',monospace;font-size:13px}
 .mu{color:var(--mu)}.sm{font-size:13px;padding:5px 10px}
@@ -20,17 +20,17 @@ aside{background:var(--sf);border-right:1px solid var(--ln);padding:20px 14px;di
 .brand{font-weight:800;font-size:19px}.brand span{color:var(--g)}
 nav{display:flex;flex-direction:column;gap:2px;flex:1}
 nav a{padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--mu);font-weight:500}
-nav a:hover{background:var(--bg)}nav a.on{background:rgba(16,185,129,.12);color:var(--g);font-weight:700;box-shadow:inset 3px 0 var(--g)}
+nav a:hover{background:var(--bg)}nav a.on{background:color-mix(in srgb,var(--g) 14%,transparent);color:var(--g);font-weight:700;box-shadow:inset 3px 0 var(--g)}
 .foot{display:flex;flex-direction:column;gap:8px}
 main{padding:28px;max-width:1100px;width:100%}
-.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:18px;margin-bottom:16px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:var(--rad,10px);padding:18px;margin-bottom:16px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
 .st{margin:0}.st .n{font:600 30px 'JetBrains Mono',monospace;color:var(--b)}
 .empty{border-style:dashed;text-align:center;padding:32px}
-.btn{font:inherit;font-weight:700;border:0;border-radius:8px;padding:9px 16px;background:var(--g);color:#04251a;cursor:pointer}
+.btn{font:inherit;font-weight:700;border:0;border-radius:var(--r2,8px);padding:9px 16px;background:var(--g);color:var(--bt,#04251a);cursor:pointer}
 .btn.o{background:transparent;border:1px solid var(--ln);color:var(--tx)}.btn.b{background:var(--b);color:#fff}.btn.r{background:transparent;color:var(--r);border:1px solid var(--ln)}
 .btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.opt:focus-visible{outline:2px solid var(--b);outline-offset:2px}
-input,select,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--tx)}
+input,select,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--ln);border-radius:var(--r2,8px);background:var(--bg);color:var(--tx)}
 textarea{min-height:84px;resize:vertical}
 label{display:block;font-weight:500;font-size:13px;color:var(--mu);margin-bottom:4px}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:12px}
@@ -44,7 +44,7 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 .timer{font:600 28px 'JetBrains Mono',monospace;color:var(--a);margin-bottom:12px}
 .pal{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .pal button{width:38px;height:38px;border-radius:8px;border:1px solid var(--ln);background:var(--bg);color:var(--tx);font:600 13px 'JetBrains Mono',monospace;cursor:pointer}
-.pal button.ans{background:var(--g);color:#04251a;border-color:var(--g)}.pal button.cur{outline:2px solid var(--b)}
+.pal button.ans{background:var(--g);color:var(--bt,#04251a);border-color:var(--g)}.pal button.cur{outline:2px solid var(--b)}
 .qt{font-size:17px;font-weight:500;margin:6px 0 16px;white-space:pre-wrap}
 .opt{display:flex;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;padding:11px 14px;margin-bottom:8px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
 .opt.on{border-color:var(--b);background:rgba(2,132,199,.12);font-weight:700}
@@ -61,6 +61,15 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 .cc .jf{display:flex;gap:8px;margin-top:auto}.cc .jf input{min-width:0}
 .th{width:96px;flex:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--ln)}
 .opt.ok2{border-color:var(--g);background:rgba(16,185,129,.16);font-weight:700}.opt.bad2{border-color:var(--r);background:rgba(220,38,38,.12)}.opt:disabled{cursor:default}
+[hidden]{display:none!important}
+.qimg{display:block;max-width:100%;max-height:380px;border-radius:8px;margin:0 0 14px}
+.sx{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;height:calc(100vh - 56px)}.sx>.card{margin:0;overflow:auto}
+.ahd{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:-18px;background:var(--sf);padding:10px 0;z-index:2;border-bottom:1px solid var(--ln)}
+.ar{display:flex;align-items:center;gap:6px;margin-bottom:6px}.ar b{width:30px;font-family:'JetBrains Mono',monospace}.ar input{flex:1}
+.ar2{border:1px solid var(--ln);border-radius:8px;padding:8px;margin-bottom:8px}
+.ab{width:36px;height:36px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--tx);font:600 13px 'JetBrains Mono',monospace;cursor:pointer;flex:none}
+.ab.sq{width:auto;border-radius:8px;padding:0 12px;height:32px}.ab.on{background:var(--b);color:#fff;border-color:var(--b)}
+@media(max-width:800px){.sx{grid-template-columns:1fr;height:auto}.pdfbox{height:60vh}}
 @media(max-width:800px){.app{grid-template-columns:1fr}aside{position:static;height:auto}nav{flex-direction:row;flex-wrap:wrap}.exam{grid-template-columns:1fr}.side{position:static}main{padding:16px}}
 .sync{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--g);flex:none}.sync.off{background:var(--a)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.55)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
@@ -97,10 +106,11 @@ let DB=LS,MODE='Lưu cục bộ trong trình duyệt',PID='';
 const EMBEDDED_CFG={"apiKey":"AIzaSyDprku7v6AVcUq9cM871HbrZOGNnJZqmeY","authDomain":"edulearn-677c5.firebaseapp.com","projectId":"edulearn-677c5","storageBucket":"edulearn-677c5.firebasestorage.app","messagingSenderId":"559238512834","appId":"1:559238512834:web:06141c945fb82345197b5b","measurementId":"G-5312JR7T95"};
 const badge=()=>PID?`<span class="sync" role="img" title="Đã đồng bộ cloud: ${esc(PID)}" aria-label="Đã đồng bộ cloud"></span>`:`<span class="sync off" role="img" title="Chưa đồng bộ cloud (chế độ cục bộ)" aria-label="Chưa đồng bộ cloud"></span>`;
 const S={user:null,v:'',off:null};let X=null;
-const ACT={},FORM={},VIEWS={};let LN={},QC={},LC={},PR=null;
+const ACT={},FORM={},VIEWS={};let LN={},QC={},LC={},PR=null,IMG={},SC={},SITE={},PJS=null;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&ACT[b.dataset.act])ACT[b.dataset.act](b.dataset,b)});
 document.addEventListener('submit',e=>{const f=e.target.closest('form[data-f]');if(!f)return;e.preventDefault();FORM[f.dataset.f](f,Object.fromEntries(new FormData(f)))});
 document.addEventListener('input',e=>{if(e.target.id==='sa')ACT.sa(e.target.value);if(e.target.id==='pa'&&PR)PR.ans[PR.qs[PR.i].id]=e.target.value});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.sh3!=null&&X&&X.sh3)X.sh3(+t.dataset.sh3,t.value);const sf=t.closest&&t.closest('form[data-f=site]');if(sf)siteLive(sf)});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='pa')ACT.prc()});
 
 /* ---- Giao diện sáng/tối ---- */
@@ -112,6 +122,7 @@ async function boot(){
   theme(localStorage.getItem('edp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
   const cfg=localStorage.getItem('edp_fbcfg')||(EMBEDDED_CFG&&JSON.stringify(EMBEDDED_CFG));
   if(cfg){try{const c=JSON.parse(cfg),d=await fsInit(c);await Promise.race([d.list('users'),new Promise((_,r)=>setTimeout(()=>r(new Error('quá thời gian chờ')),8000))]);DB=d;PID=c.projectId;MODE='Firebase Cloud Firestore'}catch(e){toast('Không liên kết được cloud ('+(e.code||e.message)+'), đang dùng chế độ cục bộ')}}
+  try{SITE=(await DB.get('settings','site'))||{}}catch(e){}applySite();
   const me=sessionStorage.getItem('edp_sess');
   if(me){const u=(await DB.list('users')).find(x=>x.id===me);if(u){S.user=u;
     if(u.role!=='admin'){S.sid=sessionStorage.getItem('edp_sid');let bad=!S.sid;try{const d=await DB.get('sessions',u.id);if(d&&d.sid!==S.sid)bad=true}catch(e){}
@@ -122,7 +133,7 @@ async function boot(){
 async function showCase(){await loadLN();const cs=await DB.list('courses');if(!cs.length||!$('#sc'))return;$('#sc').innerHTML=`<div style="max-width:1100px;margin:30px auto 0;padding:0 16px 40px"><h2 style="margin:0 0 14px">Các khóa học đang mở</h2><div class="cg">${cs.map(c=>courseCard(c,'guest')).join('')}</div></div>`}
 async function loginView(msg){
   const first=!(await DB.list('users')).length;
-  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px;display:flex;align-items:center;gap:12px">EduPractice <span>Pro</span>${badge()}</div>${msg?`<div class="card bad" style="padding:12px">${esc(msg)}</div>`:''}<p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
+  document.body.innerHTML=`<div class="login"><div class="brand" style="font-size:28px;margin-bottom:6px;display:flex;align-items:center;gap:12px">${brand()}${badge()}</div>${msg?`<div class="card bad" style="padding:12px">${esc(msg)}</div>`:''}<p class="mu">${first?'Tạo tài khoản quản trị đầu tiên để bắt đầu.':'Đăng nhập để vào khóa học của bạn.'}</p>
   <form class="card" data-f="${first?'setup':'login'}">${first?'<div style="margin-bottom:12px"><label>Họ tên</label><input name="name" required></div>':''}
   <div style="margin-bottom:12px"><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+" autocomplete="username"></div>
   <div style="margin-bottom:16px"><label>Mật khẩu</label><input name="pw" type="password" required minlength="6" autocomplete="current-password"></div>
@@ -146,9 +157,9 @@ ACT.out=m=>{X&&X.stop&&X.stop();X=null;PR=null;S.off&&S.off();S.gOff&&S.gOff();S
 
 function shell(){
   const adm=S.user.role==='admin';
-  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['notices','Thông báo'],['set','Cài đặt'],['acc','Tài khoản']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm'],['notices','Thông báo'],['acc','Tài khoản']];
-  document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}${k==='notices'&&!adm?' <span class="tag r" id="nb" hidden></span>':''}</a>`).join('')}</nav>
-  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 7</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['sheets','Đề từ file'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['notices','Thông báo'],['set','Cài đặt'],['acc','Tài khoản']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm'],['notices','Thông báo'],['acc','Tài khoản']];
+  document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">${brand()}${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}${k==='notices'&&!adm?' <span class="tag r" id="nb" hidden></span>':''}</a>`).join('')}</nav>
+  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 8</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
   if(!adm)loadEnr().then(()=>{S.nOff&&S.nOff();S.nOff=DB.watch('notices',l=>{S.nl=l;updBadge(l)})});
   go(adm?'home':'cat');
 }
@@ -161,7 +172,7 @@ function go(v){
   S.v=v;const hv={course:'cat',lessons:'courses'}[v]||v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===hv));Promise.resolve(VIEWS[v]()).catch(showErr);
 }
 ACT.go=d=>go(d.v);
-ACT.del=async d=>{if(!confirm('Xóa mục này?'))return;if(S.v==='bank'){S.cid=$('#bc').value;S.lid=$('#bl').value}
+ACT.del=async d=>{if(!confirm('Xóa mục này?'))return;if(d.c==='sheets'){const sh=await DB.get('sheets',d.i);if(sh&&sh.pdfId)for(let i=0;i<sh.pdfN;i++)await DB.del('pdfs',sh.pdfId+'_'+i)}if(S.v==='bank'){S.cid=$('#bc').value;S.lid=$('#bl').value}
   await DB.del(d.c,d.i);
   if(d.c==='courses'){for(const q of(await DB.list('questions')).filter(q=>q.courseId===d.i))await DB.del('questions',q.id);for(const l of(await DB.list('lessons')).filter(l=>l.courseId===d.i))await DB.del('lessons',l.id)}
   if(d.c==='lessons')for(const q of(await DB.list('questions')).filter(q=>q.lessonId===d.i))await DB.put('questions',q.id,{...q,lessonId:''});
@@ -241,6 +252,7 @@ VIEWS.bank=async()=>{
   <form class="card" data-f="q" id="qf"><input type="hidden" name="qid"><div class="fg"><div><label>Thuộc bài học</label><select name="lid" id="lid"></select></div><div><label>Loại câu</label><select name="p"><option value="1">Phần I, nhiều lựa chọn</option><option value="2">Phần II, đúng/sai (4 ý)</option><option value="3">Phần III, trả lời ngắn</option></select></div>
   <div><label>Đáp án: phần I là A–D, phần II là 4 ký tự Đ/S (ví dụ ĐSĐS), phần III là đáp số</label><input name="ans" required></div></div>
   <div style="margin-bottom:12px"><label>Nội dung câu hỏi</label><textarea name="text" required></textarea></div>
+  <div style="margin-bottom:12px"><label>Hình ảnh minh họa (tùy chọn, tự thu nhỏ)</label><input name="img" type="file" accept="image/*"><label style="display:flex;gap:6px;align-items:center;margin-top:6px;color:var(--tx)"><input type="checkbox" name="rmimg" style="width:auto"> Xóa ảnh hiện có của câu này</label></div>
   <div class="fg">${[0,1,2,3].map(i=>`<div><label>${'ABCD'[i]}: lựa chọn (phần I) hoặc ý ${'abcd'[i]} (phần II)</label><input name="o${i}"></div>`).join('')}</div>
   <div style="margin-bottom:12px"><label>Giải thích</label><textarea name="exp"></textarea></div><div style="display:flex;gap:10px"><button class="btn" id="qsub">Thêm câu hỏi</button><button type="button" class="btn o" data-act="qreset">Hủy sửa</button></div></form>
   <details class="card"><summary><b>Nhập hàng loạt (JSON)</b></summary><p class="mu sm">Các câu sẽ được nhập vào bài học đang xem ở trên. Mỗi câu: {"part":1,"text":"...","opts":["a","b","c","d"],"ans":"B","exp":"..."}. Đáp án viết theo cùng quy tắc ở trên.</p><textarea id="imp" class="mono" style="min-height:120px"></textarea><div style="margin-top:10px"><button class="btn b" data-act="imp">Nhập vào bài học đang xem</button></div></details><div id="ql"></div>`;
@@ -256,11 +268,11 @@ async function fillL(keep){
 async function listQ(){
   const c=$('#bc').value,l=$('#bl').value,qs=(await DB.list('questions')).filter(q=>q.courseId===c&&(q.lessonId||'')===l).sort((a,b)=>a.part-b.part||a.at-b.at);
   QC=Object.fromEntries(qs.map(q=>[q.id,q]));
-  $('#ql').innerHTML=`<div class="card"><div class="mu sm" style="margin-bottom:8px">${qs.length} câu hỏi ${l?'trong bài học này':'chưa gán bài học'}</div>${qs.length?`<table>${qs.map(q=>`<tr><td><span class="tag">${PN[q.part]}</span></td><td>${esc(q.text.slice(0,140))}</td><td class="mono">${esc(fc(q))}</td><td style="white-space:nowrap"><button class="btn o sm" data-act="qedit" data-i="${q.id}">Sửa</button> <button class="btn r sm" data-act="del" data-c="questions" data-i="${q.id}">Xóa</button></td></tr>`).join('')}</table>`:''}</div>`;
+  $('#ql').innerHTML=`<div class="card"><div class="mu sm" style="margin-bottom:8px">${qs.length} câu hỏi ${l?'trong bài học này':'chưa gán bài học'}</div>${qs.length?`<table>${qs.map(q=>`<tr><td><span class="tag">${PN[q.part]}</span></td><td>${q.img?'<span class="tag b">Có ảnh</span> ':''}${esc(q.text.slice(0,140))}</td><td class="mono">${esc(fc(q))}</td><td style="white-space:nowrap"><button class="btn o sm" data-act="qedit" data-i="${q.id}">Sửa</button> <button class="btn r sm" data-act="del" data-c="questions" data-i="${q.id}">Xóa</button></td></tr>`).join('')}</table>`:''}</div>`;
 }
 const ansStr=q=>q.part==1?'ABCD'[q.ans]:q.part==2?q.ans.map(v=>v?'Đ':'S').join(''):q.ans;
-const mkQ=(c,l,p,o)=>{const ans=parseAns(p,o.ans);if(ans===null||!o.text)return null;const opts=[0,1,2,3].map(i=>(o.opts||[])[i]||'');if(p<3&&opts.some(x=>!x))return null;return{courseId:c,lessonId:l||'',part:p,text:String(o.text).trim(),opts:p<3?opts:[],ans,exp:o.exp||'',at:Date.now()}};
-FORM.q=async(f,d)=>{const old=d.qid&&QC[d.qid],q=mkQ($('#bc').value,d.lid,+d.p,{text:d.text,ans:d.ans,exp:d.exp,opts:[d.o0,d.o1,d.o2,d.o3]});if(!q)return toast('Câu hỏi hoặc đáp án chưa hợp lệ, kiểm tra lại các ô lựa chọn và đáp án');if(old)q.at=old.at;await DB.put('questions',d.qid||uid(),q);ACT.qreset();toast(old?'Đã cập nhật câu hỏi':'Đã thêm câu hỏi');listQ()};
+const mkQ=(c,l,p,o)=>{const ans=parseAns(p,o.ans);if(ans===null||!o.text)return null;const opts=[0,1,2,3].map(i=>(o.opts||[])[i]||'');if(p<3&&opts.some(x=>!x))return null;return{courseId:c,lessonId:l||'',part:p,text:String(o.text).trim(),opts:p<3?opts:[],ans,exp:o.exp||'',at:Date.now(),...(typeof o.img==='string'&&/^(https?:|data:image)/.test(o.img)?{img:o.img}:{})}};
+FORM.q=async(f,d)=>{const old=d.qid&&QC[d.qid],q=mkQ($('#bc').value,d.lid,+d.p,{text:d.text,ans:d.ans,exp:d.exp,opts:[d.o0,d.o1,d.o2,d.o3]});if(!q)return toast('Câu hỏi hoặc đáp án chưa hợp lệ, kiểm tra lại các ô lựa chọn và đáp án');if(old)q.at=old.at;if(d.img&&d.img.size){try{q.img=await fitImg(d.img,900)}catch(e){return toast('Không đọc được ảnh hoặc ảnh quá lớn')}}else if(old&&old.img&&!d.rmimg)q.img=old.img;await DB.put('questions',d.qid||uid(),q);ACT.qreset();toast(old?'Đã cập nhật câu hỏi':'Đã thêm câu hỏi');listQ()};
 ACT.qreset=()=>{const f=$('#qf');f.reset();f.elements.qid.value='';$('#qsub').textContent='Thêm câu hỏi';$('#lid').value=$('#bl').value};
 ACT.qedit=d=>{const q=QC[d.i],e=$('#qf').elements;e.qid.value=d.i;e.p.value=q.part;e.ans.value=ansStr(q);e.text.value=q.text;[0,1,2,3].forEach(i=>e['o'+i].value=q.opts[i]||'');e.exp.value=q.exp||'';$('#lid').value=q.lessonId||'';$('#qsub').textContent='Lưu thay đổi';$('#qf').scrollIntoView({block:'center'})};
 ACT.imp=async()=>{let a;try{a=JSON.parse($('#imp').value)}catch(e){return toast('JSON không hợp lệ')}if(!Array.isArray(a))return toast('JSON phải là một mảng câu hỏi');let n=0;for(const[i,o]of a.entries()){const q=mkQ($('#bc').value,$('#bl').value,+o.part,o);if(q){q.at+=i;await DB.put('questions',uid(),q);n++}}toast(`Đã nhập ${n}/${a.length} câu`);$('#imp').value='';listQ()};
@@ -287,17 +299,18 @@ ACT.lmv=async d=>{const ls=Object.values(LC).sort((a,b)=>a.order-b.order),i=ls.f
 ACT.open=d=>{S.cid=d.c;go('course')};
 ACT.enter=d=>{S.cid=d.c;go('course')};
 VIEWS.course=async()=>{
-  const[cs,ls,qs,at,en]=await Promise.all(['courses','lessons','questions','attempts','enroll'].map(x=>DB.list(x))),c=cs.find(x=>x.id===S.cid);
+  const[cs,ls,qs,at,en,shs0]=await Promise.all(['courses','lessons','questions','attempts','enroll','sheets'].map(x=>DB.list(x))),c=cs.find(x=>x.id===S.cid);
   if(!c||!en.some(e=>e.id===S.user.id+'_'+c.id))return go('cat');
   const mine=ls.filter(l=>l.courseId===c.id).sort((a,b)=>a.order-b.order),my=at.filter(a=>a.user===S.user.id&&a.courseId===c.id),total=qs.filter(q=>q.courseId===c.id).length;
   const lessonCard=(l,i)=>{const nq=qs.filter(q=>q.lessonId===l.id).length,m=my.filter(a=>a.lessonId===l.id),done=m.filter(a=>a.status==='done'),doing=m.find(a=>a.status==='doing'),best=done.length?Math.max(...done.map(a=>a.score)):null,lk=l.link&&/^https?:\/\//.test(l.link);
     return`<div class="card"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><span class="mono mu sm">Bài ${i+1}</span><h3 style="margin:2px 0">${esc(l.title)}</h3><div class="mu sm">${esc(l.desc)}</div></div><div>${done.length?'<span class="tag g">Đã hoàn thành</span>':doing?'<span class="tag a">Đang làm dở</span>':''}</div></div>
     ${l.content||lk?`<details style="margin:10px 0"><summary><b>Nội dung bài học</b></summary><div class="qt" style="font-size:15px;margin-top:8px">${esc(l.content||'')}</div>${lk?`<a class="btn o sm" style="display:inline-block;text-decoration:none" href="${esc(l.link)}" target="_blank" rel="noopener">Mở tài liệu hoặc video</a>`:''}</details>`:''}
     <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">${nq?(doing?`<button class="btn b" data-act="resume" data-a="${doing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}" data-l="${l.id}">Làm bài tập (${nq} câu${l.mins?', '+l.mins+' phút':''})</button>`):'<span class="mu sm">Bài này chưa có bài tập</span>'}${nq?`<button class="btn o" data-act="prac" data-c="${c.id}" data-l="${l.id}">Luyện tập (xem đáp án ngay)</button>`:''}${best!=null?`<span class="mono sm">Điểm cao nhất ${best}/10</span>`:''}</div></div>`};
-  const gdoing=my.find(a=>a.status==='doing'&&!a.lessonId);
+  const gdoing=my.find(a=>a.status==='doing'&&!a.lessonId&&!a.sheetId),shs=shs0.filter(x=>x.courseId===c.id).sort((a,b)=>a.at-b.at);
+  const shSec=shs.length?`<h3 style="margin-top:22px">Đề thi từ file</h3>${shs.map(x=>{const m=my.filter(a=>a.sheetId===x.id),dn=m.filter(a=>a.status==='done'),dg=m.find(a=>a.status==='doing'),best=dn.length?Math.max(...dn.map(a=>a.score)):null;return`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>${esc(x.title)}</b><div class="mu sm">${x.nI+x.nII+x.nIII} câu, ${x.mins?x.mins+' phút':'không giới hạn thời gian'}${best!=null?', điểm cao nhất '+best+'/10':''}</div></div>${dg?`<button class="btn b" data-act="resume" data-a="${dg.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="shstart" data-s="${x.id}">Làm đề</button>`}</div>`}).join('')}`:'';
   $('#main').innerHTML=`<button class="btn o sm" data-act="go" data-v="cat">Quay lại các khóa học</button><div style="display:flex;gap:16px;align-items:center;margin:14px 0 18px;flex-wrap:wrap"><div class="th" style="width:140px">${cover(c)}</div><div><h1 style="margin:0">${esc(c.name)}</h1><div class="mu">${esc(c.desc)}</div></div></div>
   <h3>Bài học</h3>${mine.length?mine.map(lessonCard).join(''):'<p class="mu">Khóa học chưa có bài học nào.</p>'}
-  ${total&&c.n1+c.n2+c.n3?`<h3 style="margin-top:22px">Ôn tập tổng hợp</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Đề tổng hợp</b><div class="mu sm">Rút ngẫu nhiên ${c.n1+c.n2+c.n3} câu từ toàn bộ ngân hàng của khóa học, ${c.mins} phút.</div></div>${gdoing?`<button class="btn b" data-act="resume" data-a="${gdoing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Làm đề tổng hợp</button>`}<button class="btn o" data-act="prac" data-c="${c.id}">Luyện tập toàn bộ câu hỏi</button></div>`:''}`;
+  ${shSec}${total&&c.n1+c.n2+c.n3?`<h3 style="margin-top:22px">Ôn tập tổng hợp</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Đề tổng hợp</b><div class="mu sm">Rút ngẫu nhiên ${c.n1+c.n2+c.n3} câu từ toàn bộ ngân hàng của khóa học, ${c.mins} phút.</div></div>${gdoing?`<button class="btn b" data-act="resume" data-a="${gdoing.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-act="start" data-c="${c.id}">Làm đề tổng hợp</button>`}<button class="btn o" data-act="prac" data-c="${c.id}">Luyện tập toàn bộ câu hỏi</button></div>`:''}`;
 };
 
 /* ---- Làm bài: giao diện một trang, đổi câu không tải lại, không cuộn nhảy ---- */
@@ -311,10 +324,10 @@ ACT.start=async d=>{
   if(d.l){l=(await DB.list('lessons')).find(x=>x.id===d.l);[1,2,3].forEach(p=>{const g=all.filter(q=>q.lessonId===l.id&&q.part===p).sort((a,b)=>a.at-b.at);qs.push(...(l.shuf?shuffle(g):g))})}
   else[1,2,3].forEach(p=>qs.push(...shuffle(all.filter(q=>q.courseId===c.id&&q.part===p)).slice(0,c['n'+p])));
   if(!qs.length)return toast(l?'Bài học chưa có câu hỏi':'Khóa học chưa có câu hỏi');
-  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs,ans:{},cur:0,answered:0,status:'doing',score:null,ip:await getIP(),updated:Date.now()};
+  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:c.id,lessonId:l?l.id:'',courseName:c.name+(l?' / '+l.title:''),start:Date.now(),mins:l?(l.mins||0):c.mins,qs:qs.map(strip),ans:{},cur:0,answered:0,status:'doing',score:null,ip:await getIP(),updated:Date.now()};
   await DB.put('attempts',A.id,A);exam(A);
 };
-ACT.resume=async d=>exam((await DB.list('attempts')).find(a=>a.id===d.a));
+ACT.resume=async d=>{const A=(await DB.list('attempts')).find(a=>a.id===d.a);if(A.sheet)sheetExam(A);else{await prep(A);exam(A)}};
 function exam(A){
   S.off&&S.off();S.cid=A.courseId;const qs=A.qs;
   $('#main').innerHTML=`<div class="exam"><div class="card" id="qp"></div><div class="card side"><div class="timer" id="tm"></div><div class="pal" id="pal"></div><div style="display:flex;gap:8px"><button class="btn o" data-act="xexit">Lưu và thoát</button><button class="btn" data-act="xsubmit">Nộp bài</button></div></div></div>`;
@@ -324,7 +337,7 @@ function exam(A){
     if(q.part==1)b=q.opts.map((o,i)=>`<button class="opt ${a===i?'on':''}" data-act="xo" data-i="${i}"><b>${'ABCD'[i]}</b>${esc(o)}</button>`).join('');
     else if(q.part==2)b=q.opts.map((o,i)=>`<div class="tf"><span><b>${'abcd'[i]})</b> ${esc(o)}</span><span><button class="opt ${a&&a[i]===true?'on':''}" data-act="xt" data-i="${i}" data-v="1">Đúng</button><button class="opt ${a&&a[i]===false?'on':''}" data-act="xt" data-i="${i}" data-v="0">Sai</button></span></div>`).join('');
     else b=`<input id="sa" value="${esc(a||'')}" placeholder="Nhập đáp số" autocomplete="off">`;
-    $('#qp').innerHTML=`<div class="mu">${PN[q.part]}, câu ${A.cur+1}/${qs.length}</div><div class="qt">${esc(q.text)}</div>${b}<div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn o" data-act="xgo" data-i="${A.cur-1}" ${A.cur?'':'disabled'}>Câu trước</button><button class="btn o" data-act="xgo" data-i="${A.cur+1}" ${A.cur<qs.length-1?'':'disabled'}>Câu sau</button></div>`;pal()};
+    $('#qp').innerHTML=`<div class="mu">${PN[q.part]}, câu ${A.cur+1}/${qs.length}</div><div class="qt">${esc(q.text)}</div>${qimg(q)}${b}<div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn o" data-act="xgo" data-i="${A.cur-1}" ${A.cur?'':'disabled'}>Câu trước</button><button class="btn o" data-act="xgo" data-i="${A.cur+1}" ${A.cur<qs.length-1?'':'disabled'}>Câu sau</button></div>`;pal()};
   const tick=()=>{if(!A.mins){const t=$('#tm');if(t){t.textContent='Không giới hạn';t.style.fontSize='18px'}return}const left=A.start+A.mins*60000-Date.now();if($('#tm'))$('#tm').textContent=mmss(left);if(left<=0){toast('Hết giờ, hệ thống tự nộp bài');submit()}};
   const iv=[setInterval(tick,1000),setInterval(save,10000)];
   const submit=async()=>{X.stop();const sum=qs.reduce((s,q)=>s+grade(q,A.ans[q.id]),0);A.status='done';A.score=Math.round(sum/qs.length*1000)/100;A.end=Date.now();await save();X=null;result(A)};
@@ -341,9 +354,9 @@ ACT.xsubmit=()=>confirm('Nộp bài ngay bây giờ?')&&X.submit();
 function result(A){
   S.off&&S.off();
   $('#main').innerHTML=`<h1>Kết quả: ${esc(A.courseName)}</h1><div class="card"><div class="mono" style="font-size:38px;color:var(--g)">${A.score}/10</div><span class="mu">Đã trả lời ${A.answered}/${A.qs.length} câu</span> <button class="btn o sm" data-act="go" data-v="${S.user.role==='admin'?'live':'hist'}">Quay lại</button></div>
-  ${A.qs.map((q,i)=>{const g=grade(q,A.ans[q.id]);return`<div class="card ${g==1?'ok':'bad'}"><div class="mu sm">Câu ${i+1}, ${PN[q.part]}</div><div class="qt" style="font-size:15px">${esc(q.text)}</div>${q.part<3?q.opts.map((o,k)=>`<div class="sm">${'ABCD'[k]}. ${esc(o)}</div>`).join(''):''}<p class="sm"><b>Bạn chọn:</b> ${esc(fa(q,A.ans[q.id]))}. <b>Đáp án:</b> ${esc(fc(q))}</p>${q.exp?`<p class="sm mu">${esc(q.exp)}</p>`:''}</div>`}).join('')}`;
+  ${A.qs.map((q,i)=>{const g=grade(q,A.ans[q.id]);return`<div class="card ${g==1?'ok':'bad'}"><div class="mu sm">Câu ${i+1}, ${PN[q.part]}</div><div class="qt" style="font-size:15px">${esc(q.text)}</div>${qimg(q)}${q.part<3?q.opts.map((o,k)=>`<div class="sm">${'ABCD'[k]}. ${esc(o)}</div>`).join(''):''}<p class="sm"><b>Bạn chọn:</b> ${esc(fa(q,A.ans[q.id]))}. <b>Đáp án:</b> ${esc(fc(q))}</p>${q.exp?`<p class="sm mu">${esc(q.exp)}</p>`:''}</div>`}).join('')}`;
 }
-ACT.view=async d=>result((await DB.list('attempts')).find(a=>a.id===d.a));
+ACT.view=async d=>{const A=(await DB.list('attempts')).find(a=>a.id===d.a);if(A.sheet)resultSheet(A);else{await prep(A);result(A)}};
 
 /* ---- Chế độ luyện tập: chọn xong là hiện đáp án và giải thích ngay ---- */
 ACT.prac=async d=>{
@@ -366,7 +379,7 @@ function practice(){
   const g=ck?grade(q,a):0;
   $('#main').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><h1 style="margin:0">Luyện tập</h1><button class="btn o sm" data-act="prx">Thoát</button></div>
   <div class="bar" style="margin-bottom:6px"><i style="width:${(PR.i+1)/n*100}%"></i></div><div class="mu sm" style="margin-bottom:12px">Câu ${PR.i+1}/${n}, đã đúng ${right}</div>
-  <div class="card"><div class="mu sm">${PN[q.part]}</div><div class="qt">${esc(q.text)}</div>${b}
+  <div class="card"><div class="mu sm">${PN[q.part]}</div><div class="qt">${esc(q.text)}</div>${qimg(q)}${b}
   ${ck?`<div class="card ${g==1?'ok':'bad'}" style="margin:14px 0 0"><b>${g==1?'Chính xác':'Chưa đúng'}</b><p class="sm" style="margin:6px 0">Đáp án đúng: <b>${esc(fc(q))}</b></p>${q.exp?`<p class="sm mu" style="margin:0">${esc(q.exp)}</p>`:''}</div>`:''}
   <div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn o" data-act="prp" ${PR.i?'':'disabled'}>Câu trước</button><button class="btn ${ck?'':'o'}" data-act="prn">${PR.i<n-1?'Câu sau':'Hoàn thành'}</button></div></div>`;
 }
@@ -413,7 +426,7 @@ ACT.pwreset=async d=>{
 
 /* ---- Thông báo ---- */
 async function loadEnr(){S.enr=new Set((await DB.list('enroll')).filter(e=>e.user===S.user.id).map(e=>e.courseId))}
-function updBadge(list){const b=$('#nb');if(!b||!S.enr)return;const seen=+localStorage.getItem('edp_seen_'+S.user.id)||0,n=list.filter(x=>(!x.courseId||S.enr.has(x.courseId))&&x.at>seen).length;b.hidden=!n;b.textContent=n}
+function updBadge(list){const b=$('#nb');if(!b||!S.enr)return;const seen=+localStorage.getItem('edp_seen_'+S.user.id)||0,n=list.filter(x=>(!x.courseId||S.enr.has(x.courseId))&&x.at>seen).length;b.hidden=!n;b.textContent=n||''}
 VIEWS.notices=async()=>{
   const[ns,cs]=await Promise.all([DB.list('notices'),DB.list('courses')]),adm=S.user.role==='admin',cn=id=>id?esc((cs.find(c=>c.id===id)||{}).name||'(khóa học đã xóa)'):'Tất cả học viên';
   let list=[...ns].sort((a,b)=>b.at-a.at);
@@ -422,6 +435,116 @@ VIEWS.notices=async()=>{
   ${list.length?list.map(n=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3 style="margin:0">${esc(n.title)}</h3><span class="tag">${cn(n.courseId)}</span></div><div class="mu sm" style="margin:4px 0 10px">${new Date(n.at).toLocaleString('vi-VN')}</div><div style="white-space:pre-wrap">${esc(n.body)}</div>${adm?`<div style="margin-top:12px"><button class="btn r sm" data-act="del" data-c="notices" data-i="${n.id}">Xóa</button></div>`:''}</div>`).join(''):'<div class="card empty"><p class="mu">Chưa có thông báo nào.</p></div>'}`;
 };
 FORM.notice=async(f,d)=>{await DB.put('notices',uid(),{title:d.title.trim(),body:d.body.trim(),courseId:d.c,at:Date.now()});toast('Đã đăng thông báo');go('notices')};
+
+/* ---- Hình ảnh trong câu hỏi ---- */
+const fitImg=(f,W,type)=>new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const i=new Image();i.onerror=no;i.onload=()=>{const k=Math.min(1,W/i.width),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);const x=c.getContext('2d');if(type!=='png'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(i,0,0,c.width,c.height);const u=c.toDataURL(type==='png'?'image/png':'image/jpeg',.8);u.length>800000?no():ok(u)};i.src=r.result};r.readAsDataURL(f)});
+const qimg=q=>{const u=q.img||IMG[q.id];return u?`<img class="qimg" src="${esc(u)}" alt="Hình minh họa câu hỏi">`:''};
+const strip=q=>{if(q.img)IMG[q.id]=q.img;const{img,...r}=q;return q.img?{...r,hasImg:true}:r};
+async function prep(A){if(A.qs.some(q=>q.hasImg&&!IMG[q.id]))(await DB.list('questions')).forEach(q=>{if(q.img)IMG[q.id]=q.img})}
+
+/* ---- Đề từ file PDF + phiếu trả lời ---- */
+VIEWS.sheets=async()=>{
+  const[cs,shs]=await Promise.all([DB.list('courses'),DB.list('sheets')]);
+  if(!cs.length)return $('#main').innerHTML='<h1>Đề từ file</h1>'+noCourse;
+  SC=Object.fromEntries(shs.map(x=>[x.id,x]));const cn=id=>esc((cs.find(c=>c.id===id)||{}).name||'(đã xóa)');
+  $('#main').innerHTML=`<h1>Đề thi từ file PDF</h1><p class="mu">Tải file đề PDF và nhập đáp án. Học viên xem đề ở một bên và điền phiếu trả lời ở bên kia.</p>
+  <form class="card" data-f="sheet" id="sf"><input type="hidden" name="sid"><div class="fg"><div><label>Khóa học</label><select name="c">${cOpts(cs)}</select></div><div><label>Tên đề</label><input name="title" required></div><div><label>Thời gian (phút, 0 = không giới hạn)</label><input name="mins" type="number" min="0" value="60"></div></div>
+  <div class="fg"><div><label>Tải file PDF lên (tối đa 5 MB; khi sửa đề, để trống nếu giữ file cũ)</label><input name="pdf" type="file" accept="application/pdf"></div><div><label>Hoặc dán liên kết PDF (Google Drive dạng .../preview, hoặc file trên GitHub)</label><input name="url" type="url" placeholder="https://"></div></div>
+  <div class="fg"><div><label>Số câu phần I (chọn A–D)</label><input name="nI" type="number" min="0" value="0"></div><div><label>Số câu phần II (đúng/sai 4 ý)</label><input name="nII" type="number" min="0" value="0"></div><div><label>Số câu phần III (trả lời ngắn)</label><input name="nIII" type="number" min="0" value="0"></div></div>
+  <div style="margin-bottom:12px"><label>Đáp án phần I: viết liền hoặc cách nhau bằng dấu cách, ví dụ ABCDDCBA</label><input name="kI" class="mono"></div>
+  <div style="margin-bottom:12px"><label>Đáp án phần II: mỗi câu một dòng, 4 ký tự Đ/S, ví dụ ĐSĐS</label><textarea name="kII" class="mono"></textarea></div>
+  <div style="margin-bottom:12px"><label>Đáp án phần III: mỗi câu một dòng</label><textarea name="kIII" class="mono"></textarea></div>
+  <div style="display:flex;gap:10px"><button class="btn" id="ssub">Lưu đề</button><button type="button" class="btn o" data-act="shreset">Hủy sửa</button></div></form>
+  <div class="card">${shs.length?`<table><tr><th>Đề</th><th>Khóa học</th><th>Cấu trúc</th><th>File</th><th></th></tr>${shs.sort((a,b)=>b.at-a.at).map(x=>`<tr><td><b>${esc(x.title)}</b></td><td>${cn(x.courseId)}</td><td class="mono sm">${x.nI}/${x.nII}/${x.nIII}, ${x.mins?x.mins+' phút':'không giới hạn'}</td><td class="sm">${x.pdfId?esc(x.pdfName||'PDF đã tải lên'):'Liên kết'}</td><td style="white-space:nowrap"><button class="btn o sm" data-act="shedit" data-i="${x.id}">Sửa</button> <button class="btn r sm" data-act="del" data-c="sheets" data-i="${x.id}">Xóa</button></td></tr>`).join('')}</table>`:'<p class="mu">Chưa có đề nào.</p>'}</div>`;
+};
+FORM.sheet=async(f,d)=>{
+  const nI=+d.nI||0,nII=+d.nII||0,nIII=+d.nIII||0,kI=[...d.kI.replace(/[^A-Da-d]/g,'').toUpperCase()].map(c=>'ABCD'.indexOf(c)),
+    kII=d.kII.split('\n').map(x=>x.trim()).filter(Boolean).map(x=>parseAns(2,x)),kIII=d.kIII.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(nI+nII+nIII<1)return toast('Đề cần có ít nhất 1 câu');
+  if(kI.length!==nI)return toast(`Đáp án phần I cần đúng ${nI} ký tự A–D, hiện có ${kI.length}`);
+  if(kII.length!==nII||kII.includes(null))return toast(`Đáp án phần II cần đúng ${nII} dòng, mỗi dòng 4 ký tự Đ/S`);
+  if(kIII.length!==nIII)return toast(`Đáp án phần III cần đúng ${nIII} dòng, hiện có ${kIII.length}`);
+  const old=d.sid&&SC[d.sid],rec={courseId:d.c,title:d.title.trim(),mins:+d.mins||0,nI,nII,nIII,kI,kII:kII.map(a=>a.map(v=>v?'Đ':'S').join('')),kIII,at:old?old.at:Date.now(),pdfId:old?old.pdfId||'':'',pdfN:old?old.pdfN||0:0,pdfUrl:old?old.pdfUrl||'':'',pdfName:old?old.pdfName||'':''};
+  const dropOld=async()=>{if(rec.pdfId){for(let i=0;i<rec.pdfN;i++)await DB.del('pdfs',rec.pdfId+'_'+i);rec.pdfId='';rec.pdfN=0;rec.pdfName=''}};
+  if(d.pdf&&d.pdf.size){
+    if(d.pdf.size>5e6)return toast('File PDF lớn hơn 5 MB. Hãy nén file hoặc dùng liên kết');
+    toast('Đang tải file lên, vui lòng đợi...');
+    const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result.split(',')[1]);r.onerror=no;r.readAsDataURL(d.pdf)});
+    await dropOld();const pid=uid(),Z=600000,n=Math.ceil(b64.length/Z);
+    for(let i=0;i<n;i++)await DB.put('pdfs',pid+'_'+i,{pid,i,n,d:b64.slice(i*Z,(i+1)*Z)});
+    rec.pdfId=pid;rec.pdfN=n;rec.pdfName=d.pdf.name;rec.pdfUrl='';
+  }else if(d.url.trim()){if(!/^https?:\/\//.test(d.url.trim()))return toast('Liên kết phải bắt đầu bằng http hoặc https');await dropOld();rec.pdfUrl=d.url.trim()}
+  if(!rec.pdfId&&!rec.pdfUrl)return toast('Hãy tải file PDF lên hoặc dán liên kết');
+  await DB.put('sheets',d.sid||uid(),rec);toast('Đã lưu đề');go('sheets');
+};
+ACT.shedit=d=>{const x=SC[d.i],e=$('#sf').elements;e.sid.value=x.id;e.c.value=x.courseId;e.title.value=x.title;e.mins.value=x.mins;e.url.value=x.pdfUrl||'';e.nI.value=x.nI;e.nII.value=x.nII;e.nIII.value=x.nIII;e.kI.value=x.kI.map(k=>'ABCD'[k]).join('');e.kII.value=x.kII.join('\n');e.kIII.value=x.kIII.join('\n');$('#ssub').textContent='Lưu thay đổi';$('#sf').scrollIntoView({block:'center'})};
+ACT.shreset=()=>{$('#sf').reset();$('#sf').elements.sid.value='';$('#ssub').textContent='Lưu đề'};
+function loadPdfJs(){return PJS||(PJS=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok()};s.onerror=no;document.head.append(s)}))}
+async function showPdf(el,sh){
+  el.innerHTML='<p class="mu">Đang tải đề...</p>';
+  try{
+    if(sh.pdfUrl){el.innerHTML=`<iframe src="${esc(sh.pdfUrl)}" style="width:100%;height:100%;min-height:60vh;border:0" title="Đề thi"></iframe>`;return}
+    const ch=await Promise.all(Array.from({length:sh.pdfN},(_,i)=>DB.get('pdfs',sh.pdfId+'_'+i))),bin=atob(ch.map(c=>c.d).join('')),u=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    await loadPdfJs();const pdf=await pdfjsLib.getDocument({data:u}).promise;el.innerHTML='';const w=Math.max(260,el.clientWidth-30);
+    for(let n=1;n<=pdf.numPages;n++){const pg=await pdf.getPage(n),k=w/pg.getViewport({scale:1}).width,v=pg.getViewport({scale:k*Math.min(2,devicePixelRatio||1)}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.cssText=`width:${w}px;display:block;margin:0 auto 10px`;el.append(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise}
+  }catch(e){el.innerHTML='<p class="mu">Không tải được file đề. Hãy tải lại trang hoặc báo quản trị viên.</p>'}
+}
+ACT.shstart=async d=>{
+  const sh=await DB.get('sheets',d.s),c=await DB.get('courses',sh.courseId);
+  const A={id:uid(),user:S.user.id,name:S.user.name,courseId:sh.courseId,sheetId:sh.id,lessonId:'',courseName:c.name+' / '+sh.title,start:Date.now(),mins:sh.mins||0,qs:[],total:sh.nI+sh.nII+sh.nIII,
+    ans:{I:Array(sh.nI).fill(null),II:Array(sh.nII).fill('----'),III:Array(sh.nIII).fill('')},answered:0,status:'doing',score:null,ip:await getIP(),updated:Date.now(),
+    sheet:{title:sh.title,nI:sh.nI,nII:sh.nII,nIII:sh.nIII,kI:sh.kI,kII:sh.kII,kIII:sh.kIII,pdfId:sh.pdfId||'',pdfN:sh.pdfN||0,pdfUrl:sh.pdfUrl||''}};
+  await DB.put('attempts',A.id,A);sheetExam(A);
+};
+const shGrade=A=>{const s=A.sheet,K=A.ans;let t=0;s.kI.forEach((k,i)=>{if(K.I[i]===k)t++});s.kII.forEach((k,i)=>{const a=K.II[i]||'----';let c=0;for(let j=0;j<4;j++)if(a[j]===k[j])c++;t+=[0,.1,.25,.5,1][c]});s.kIII.forEach((k,i)=>{if(norm(K.III[i])&&norm(K.III[i])===norm(k))t++});return Math.round(t/A.total*1000)/100};
+function sheetExam(A){
+  S.off&&S.off();S.cid=A.courseId;const sh=A.sheet,K=A.ans;
+  $('#main').innerHTML='<div class="sx"><div class="card pdfbox" id="pdf"></div><div class="card" id="asw"></div></div>';showPdf($('#pdf'),sh);
+  const cnt=()=>K.I.filter(v=>v!=null).length+K.II.filter(v=>/[ĐS]/.test(v)).length+K.III.filter(v=>norm(v)).length;
+  const save=()=>{A.updated=Date.now();A.answered=cnt();return DB.put('attempts',A.id,A)};
+  const touch=()=>{if(!touch.t)touch.t=setTimeout(()=>{touch.t=0;save()},1500)};
+  const upd=()=>{const c=$('#cnt');if(c)c.textContent=`Đã trả lời ${cnt()}/${A.total}`};
+  const tick=()=>{const t=$('#tm');if(!t)return;if(!A.mins){t.textContent='Không giới hạn';t.style.fontSize='16px';return}const left=A.start+A.mins*60000-Date.now();t.textContent=mmss(left);if(left<=0){toast('Hết giờ, hệ thống tự nộp bài');submit()}};
+  const draw=()=>{const el=$('#asw');if(!el)return;const st=el.scrollTop;
+    el.innerHTML=`<div class="ahd"><div class="timer" id="tm" style="margin:0;font-size:22px"></div><div style="display:flex;gap:8px"><button class="btn o sm" data-act="shexit">Lưu và thoát</button><button class="btn sm" data-act="shsubmit">Nộp bài</button></div></div><div class="mu sm" id="cnt" style="margin:8px 0"></div>
+    ${sh.nI?`<h3>Phần I</h3>${K.I.map((v,i)=>`<div class="ar"><b>${i+1}</b>${[0,1,2,3].map(k=>`<button class="ab ${v===k?'on':''}" data-act="shA" data-i="${i}" data-k="${k}">${'ABCD'[k]}</button>`).join('')}</div>`).join('')}`:''}
+    ${sh.nII?`<h3>Phần II</h3>${K.II.map((v,i)=>`<div class="ar2"><b>Câu ${i+1}</b>${[0,1,2,3].map(j=>`<div class="ar"><span class="mono" style="width:30px">${'abcd'[j]})</span><button class="ab sq ${v[j]==='Đ'?'on':''}" data-act="shB" data-i="${i}" data-j="${j}" data-v="Đ">Đúng</button><button class="ab sq ${v[j]==='S'?'on':''}" data-act="shB" data-i="${i}" data-j="${j}" data-v="S">Sai</button></div>`).join('')}</div>`).join('')}`:''}
+    ${sh.nIII?`<h3>Phần III</h3>${K.III.map((v,i)=>`<div class="ar"><b>${i+1}</b><input data-sh3="${i}" value="${esc(v)}" placeholder="Đáp số" autocomplete="off"></div>`).join('')}`:''}`;
+    el.scrollTop=st;upd();tick()};
+  const iv=[setInterval(tick,1000),setInterval(save,10000)];
+  const submit=async()=>{X.stop();A.score=shGrade(A);A.status='done';A.end=Date.now();await save();X=null;resultSheet(A)};
+  X={stop:()=>{iv.forEach(clearInterval);clearTimeout(touch.t)},
+    shA:(i,k)=>{K.I[i]=K.I[i]===k?null:k;touch();draw()},
+    shB:(i,j,v)=>{const a=K.II[i].split('');a[j]=a[j]===v?'-':v;K.II[i]=a.join('');touch();draw()},
+    sh3:(i,v)=>{K.III[i]=v;touch();upd()},submit,exit:async()=>{await save();go('course')}};
+  draw();
+}
+ACT.shA=d=>X.shA(+d.i,+d.k);ACT.shB=d=>X.shB(+d.i,+d.j,d.v);ACT.shexit=()=>X.exit();ACT.shsubmit=()=>confirm('Nộp bài ngay bây giờ?')&&X.submit();
+function resultSheet(A){
+  S.off&&S.off();const s=A.sheet,K=A.ans,row=(l,y,ok,r)=>`<tr><td>${l}</td><td class="mono">${esc(y)}</td><td class="mono">${esc(r)}</td><td>${ok?'<span class="tag g">Đúng</span>':'<span class="tag r">Sai</span>'}</td></tr>`;let rows='';
+  s.kI.forEach((k,i)=>rows+=row('I.'+(i+1),K.I[i]==null?'-':'ABCD'[K.I[i]],K.I[i]===k,'ABCD'[k]));
+  s.kII.forEach((k,i)=>{const a=K.II[i]||'----';rows+=row('II.'+(i+1),a,a===k,k)});
+  s.kIII.forEach((k,i)=>rows+=row('III.'+(i+1),K.III[i]||'-',norm(K.III[i])&&norm(K.III[i])===norm(k),k));
+  $('#main').innerHTML=`<h1>Kết quả: ${esc(A.courseName)}</h1><div class="card"><div class="mono" style="font-size:38px;color:var(--g)">${A.score}/10</div><span class="mu">Đã trả lời ${A.answered}/${A.total} câu</span> <button class="btn o sm" data-act="go" data-v="${S.user.role==='admin'?'live':'hist'}">Quay lại</button></div><div class="card"><table><tr><th>Câu</th><th>Bạn chọn</th><th>Đáp án</th><th></th></tr>${rows}</table></div>`;
+}
+
+/* ---- Giao diện web ---- */
+const FONTS={'Plus Jakarta Sans':"'Plus Jakarta Sans'",'Be Vietnam Pro':"'Be Vietnam Pro'",'Inter':"'Inter'",'Mặc định hệ thống':"system-ui"},PRESET=['#10B981','#0284C7','#7C3AED','#E11D48','#EA580C','#0D9488'];
+const lum=h=>{const n=parseInt(h.slice(1),16);return(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255};
+function applySite(c=SITE){const R=document.documentElement.style,col=c.color||'#10B981',rad=c.rad??10;R.setProperty('--g',col);R.setProperty('--bt',lum(col)>.6?'#04251a':'#fff');R.setProperty('--ff',c.font||"'Plus Jakarta Sans'");R.setProperty('--rad',rad+'px');R.setProperty('--r2',Math.max(2,rad-2)+'px');document.title=c.name||'EduPractice Pro'}
+const brand=()=>{const n=SITE.name||'EduPractice Pro',i=n.lastIndexOf(' ');return(SITE.logo?`<img src="${esc(SITE.logo)}" alt="" style="height:28px;border-radius:6px">`:'')+(i>0?esc(n.slice(0,i))+' <span>'+esc(n.slice(i+1))+'</span>':esc(n))};
+const refBrand=()=>{const b=document.querySelector('aside .brand');if(b)b.innerHTML=brand()+badge()};
+function siteLive(f){const e=f.elements;applySite({...SITE,color:e.color.value,font:e.font.value,rad:+e.rad.value,name:e.name.value})}
+const siteForm=()=>`<form class="card" data-f="site"><h3>Giao diện web</h3><p class="mu sm">Thay đổi áp dụng cho mọi người dùng (lưu trên Firestore). Bạn xem trước ngay khi chọn, bấm Lưu để giữ lại.</p>
+  <div class="fg"><div><label>Tên hiển thị</label><input name="name" value="${esc(SITE.name||'EduPractice Pro')}"></div><div><label>Kiểu chữ</label><select name="font">${Object.entries(FONTS).map(([n,v])=>`<option value="${esc(v)}" ${(SITE.font||FONTS['Plus Jakarta Sans'])===v?'selected':''}>${n}</option>`).join('')}</select></div><div><label>Độ bo góc</label><select name="rad">${[[4,'Vuông vức'],[10,'Vừa'],[18,'Tròn']].map(([v,n])=>`<option value="${v}" ${(SITE.rad??10)==v?'selected':''}>${n}</option>`).join('')}</select></div><div><label>Logo (tùy chọn)</label><input name="logo" type="file" accept="image/*"></div></div>
+  <div style="margin-bottom:12px"><label>Màu chủ đạo</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${PRESET.map(c=>`<button type="button" class="ab" style="background:${c};border-color:${c}" data-act="pick" data-c="${c}" aria-label="Màu ${c}"></button>`).join('')}<input type="color" name="color" value="${SITE.color||'#10B981'}" style="width:48px;height:36px;padding:2px"></div></div>
+  <label style="display:flex;gap:6px;align-items:center;color:var(--tx);margin-bottom:12px"><input type="checkbox" name="rmlogo" style="width:auto"> Xóa logo hiện có</label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Lưu giao diện</button><button type="button" class="btn o" data-act="siteoff">Khôi phục mặc định</button></div></form>`;
+ACT.pick=d=>{const f=document.querySelector('form[data-f=site]');f.elements.color.value=d.c;siteLive(f)};
+FORM.site=async(f,d)=>{let logo=SITE.logo||'';if(d.rmlogo)logo='';if(d.logo&&d.logo.size){try{logo=await fitImg(d.logo,200,'png')}catch(e){return toast('Không đọc được logo hoặc logo quá lớn')}}
+  SITE={name:d.name.trim()||'EduPractice Pro',color:d.color,font:d.font,rad:+d.rad,logo};await DB.put('settings','site',SITE);applySite();refBrand();toast('Đã lưu giao diện');go('set')};
+ACT.siteoff=async()=>{await DB.del('settings','site');SITE={};applySite();refBrand();toast('Đã khôi phục giao diện mặc định');go('set')};
 
 /* ---- Khu vực học viên ---- */
 VIEWS.my=async()=>{
@@ -442,7 +565,7 @@ VIEWS.live=()=>{
     const avg=done.length?(done.reduce((s,a)=>s+a.score,0)/done.length).toFixed(2):'-';
     const byC={};done.forEach(a=>(byC[a.courseName]=byC[a.courseName]||[]).push(a.score));
     el.innerHTML=`<div class="stats">${[['Đang làm bài',live.length],['Tổng lượt làm',data.length],['Đã nộp',done.length],['Điểm trung bình',avg]].map(([a,b])=>`<div class="card st"><div class="n">${b}</div>${a}</div>`).join('')}</div>
-    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th><th>IP</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/a.qs.length*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.qs.length}</span></td><td class="mono">${a.status==='done'||!a.mins?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td><td class="mono sm">${esc(a.ip||'-')}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
+    <div class="card"><h3>Theo dõi trực tiếp</h3>${data.length?`<table><tr><th>Học viên</th><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Còn lại</th><th>Điểm</th><th>IP</th></tr>${[...data].sort((a,b)=>b.updated-a.updated).map(a=>{const lv=now-a.updated<45000;return`<tr><td>${esc(a.name)}</td><td>${esc(a.courseName)}</td><td>${a.status==='done'?'<span class="tag g">Đã nộp</span>':lv?'<span class="dot"></span>Đang làm':'<span class="dot a"></span>Mất kết nối'}</td><td><div class="bar"><i style="width:${a.answered/(a.total||a.qs.length)*100}%"></i></div><span class="mu sm mono">${a.answered}/${a.total||a.qs.length}</span></td><td class="mono">${a.status==='done'||!a.mins?'-':mmss(a.start+a.mins*60000-now)}</td><td class="mono">${a.score??'-'}</td><td class="mono sm">${esc(a.ip||'-')}</td></tr>`}).join('')}</table>`:'<p class="mu">Chưa có lượt làm bài nào. Dữ liệu sẽ xuất hiện ngay khi có học viên bắt đầu.</p>'}</div>
     ${Object.keys(byC).length?`<div class="card"><h3>Điểm trung bình theo khóa học</h3>${Object.entries(byC).map(([n,s])=>{const m=s.reduce((x,y)=>x+y,0)/s.length;return`<div style="margin-bottom:10px"><div class="sm">${esc(n)}: <b class="mono">${m.toFixed(2)}</b> (${s.length} bài)</div><div class="bar"><i style="width:${m*10}%;background:var(--b)"></i></div></div>`}).join('')}</div>`:''}`};
   const u=DB.watch('attempts',d=>{data=d;draw()}),t=setInterval(draw,5000);S.off=()=>{u();clearInterval(t)};
 };
@@ -456,7 +579,7 @@ VIEWS.users=async()=>{
 FORM.user=async(f,d)=>{const id=d.user.trim().toLowerCase();if((await DB.list('users')).some(u=>u.id===id))return toast('Tên đăng nhập đã tồn tại');await DB.put('users',id,{id,name:d.name.trim(),role:d.role,hash:await sha(id+':'+d.pw),mustChange:!!d.must});(S.fresh=S.fresh||[]).push({user:id,pw:d.pw});toast('Đã tạo tài khoản');go('users')};
 VIEWS.set=()=>{
   $('#main').innerHTML=`<h1>Cài đặt</h1><div class="card"><b>Nơi lưu dữ liệu hiện tại:</b> ${MODE}<div style="margin-top:10px">${badge()} <span class="sm">${PID?'Đã đồng bộ cloud: '+esc(PID):'Chưa đồng bộ, đang dùng chế độ cục bộ'}</span> <button class="btn o sm" data-act="ping">Kiểm tra kết nối</button></div></div>
-  ${localStorage.getItem('edp_fbcfg')?`<div class="card"><h3>Cho học viên dùng chung cloud</h3><p class="mu sm">Cấu hình vừa dán chỉ nằm trong trình duyệt của bạn nên máy học viên chưa thấy. Mở <code>index.html</code>, thay dòng <code>const EMBEDDED_CFG=null;</code> bằng dòng dưới, rồi đưa lại lên GitHub.</p><textarea readonly class="mono" onclick="this.select()">const EMBEDDED_CFG=${esc(localStorage.getItem('edp_fbcfg'))};</textarea></div>`:''}<form class="card" data-f="fb"><h3>Kết nối Firebase Cloud Firestore</h3><p class="mu sm">Dán đối tượng firebaseConfig (JSON) lấy từ Firebase Console. Sau khi lưu, trang tải lại và dùng Firestore với các collection: users, courses, codes, questions, enroll, attempts. Dữ liệu đang lưu cục bộ không tự chuyển sang Firestore.</p>
+  ${localStorage.getItem('edp_fbcfg')?`<div class="card"><h3>Cho học viên dùng chung cloud</h3><p class="mu sm">Cấu hình vừa dán chỉ nằm trong trình duyệt của bạn nên máy học viên chưa thấy. Mở <code>index.html</code>, thay dòng <code>const EMBEDDED_CFG=null;</code> bằng dòng dưới, rồi đưa lại lên GitHub.</p><textarea readonly class="mono" onclick="this.select()">const EMBEDDED_CFG=${esc(localStorage.getItem('edp_fbcfg'))};</textarea></div>`:''}${siteForm()}<form class="card" data-f="fb"><h3>Kết nối Firebase Cloud Firestore</h3><p class="mu sm">Dán đối tượng firebaseConfig (JSON) lấy từ Firebase Console. Sau khi lưu, trang tải lại và dùng Firestore với các collection: users, courses, codes, questions, enroll, attempts. Dữ liệu đang lưu cục bộ không tự chuyển sang Firestore.</p>
   <textarea name="cfg" class="mono" style="min-height:140px" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><div style="display:flex;gap:10px;margin-top:12px"><button class="btn">Lưu và kết nối</button><button type="button" class="btn o" data-act="fboff">Quay về chế độ cục bộ</button></div></form>
   <div class="card mu sm">Lưu ý bảo mật: đăng nhập chạy phía trình duyệt nên chỉ phù hợp để ôn tập nội bộ. Khi triển khai thật, hãy đặt Firestore Security Rules hoặc chuyển sang Firebase Authentication.</div>`;
 };
