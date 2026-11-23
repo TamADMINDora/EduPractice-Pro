@@ -142,18 +142,21 @@ async function enter(u){
 function guard(){if(S.user.role==='admin')return;S.gOff&&S.gOff();try{S.gOff=DB.watchOne('sessions',S.user.id,d=>{if(d&&S.sid&&d.sid!==S.sid)ACT.out('Tài khoản này vừa được đăng nhập ở thiết bị khác, nên phiên này đã bị đăng xuất. Bài làm dở (nếu có) vẫn được lưu để làm tiếp.')})}catch(e){}}
 FORM.setup=async(f,d)=>{const id=d.user.trim().toLowerCase();const u={id,name:d.name.trim(),role:'admin',hash:await sha(id+':'+d.pw)};await DB.put('users',id,u);enter(u)};
 FORM.login=async(f,d)=>{const id=d.user.trim().toLowerCase(),u=(await DB.list('users')).find(x=>x.id===id);if(!u||u.hash!==await sha(id+':'+d.pw))return toast('Sai tên đăng nhập hoặc mật khẩu');enter(u)};
-ACT.out=m=>{X&&X.stop&&X.stop();X=null;PR=null;S.off&&S.off();S.gOff&&S.gOff();S.gOff=null;sessionStorage.removeItem('edp_sess');sessionStorage.removeItem('edp_sid');S.user=null;loginView(typeof m==='string'?m:'')};
+ACT.out=m=>{X&&X.stop&&X.stop();X=null;PR=null;S.off&&S.off();S.gOff&&S.gOff();S.gOff=null;S.nOff&&S.nOff();S.nOff=null;S.enr=null;sessionStorage.removeItem('edp_sess');sessionStorage.removeItem('edp_sid');S.user=null;loginView(typeof m==='string'?m:'')};
 
 function shell(){
   const adm=S.user.role==='admin';
-  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['set','Cài đặt']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm']];
-  document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}</a>`).join('')}</nav>
-  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 6</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  const items=adm?[['home','Tổng quan'],['courses','Khóa học'],['cat','Trang quảng bá'],['codes','Mã kích hoạt'],['bank','Ngân hàng đề'],['live','Giám sát & thống kê'],['ips','Nhật ký đăng nhập'],['users','Người dùng'],['notices','Thông báo'],['set','Cài đặt'],['acc','Tài khoản']]:[['cat','Khám phá khóa học'],['my','Khóa học của tôi'],['hist','Kết quả đã làm'],['notices','Thông báo'],['acc','Tài khoản']];
+  document.body.innerHTML=`<div class="app"><aside><div class="brand" style="display:flex;align-items:center;gap:10px">EduPractice <span>Pro</span>${badge()}</div><nav>${items.map(([k,t])=>`<a tabindex="0" data-act="go" data-v="${k}" id="n_${k}">${t}${k==='notices'&&!adm?' <span class="tag r" id="nb" hidden></span>':''}</a>`).join('')}</nav>
+  <div class="foot"><div class="mu sm">${esc(S.user.name)} (${adm?'Quản trị':'Học viên'})</div><div class="mu sm mono">Phiên bản 7</div><button class="btn o sm" data-act="theme">Đổi giao diện</button><button class="btn o sm" data-act="out">Đăng xuất</button></div></aside><main id="main"></main></div>`;
+  if(!adm)loadEnr().then(()=>{S.nOff&&S.nOff();S.nOff=DB.watch('notices',l=>{S.nl=l;updBadge(l)})});
   go(adm?'home':'cat');
 }
 const showErr=e=>{const c=String(e&&(e.code||e.message)||'lỗi không rõ');if($('#main'))$('#main').innerHTML=`<div class="card bad"><h3>Không tải được trang này</h3><p>Chi tiết: <code>${esc(c)}</code></p>${/permission|insufficient/i.test(c)?'<p>Firestore Rules đang chặn việc đọc hoặc ghi dữ liệu. Hãy cập nhật Rules để có thêm collection <code>lessons</code>, rồi bấm Publish và tải lại trang.</p>':''}</div>`};
 addEventListener('unhandledrejection',e=>toast('Lỗi: '+String(e.reason&&(e.reason.code||e.reason.message)||e.reason)));
 function go(v){
+  if(S.user&&S.user.mustChange&&v!=='acc')v='acc';
+  if(v!=='users')S.fresh=[];
   S.off&&S.off();S.off=null;if(X){X.stop();X=null}
   S.v=v;const hv={course:'cat',lessons:'courses'}[v]||v;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===hv));Promise.resolve(VIEWS[v]()).catch(showErr);
 }
@@ -219,7 +222,7 @@ async function redeem(raw,cid){
   const eid=S.user.id+'_'+k.courseId;
   if((await DB.list('enroll')).some(e=>e.id===eid))return toast('Bạn đã có khóa học này');
   await DB.put('enroll',eid,{user:S.user.id,courseId:k.courseId,at:Date.now()});
-  await DB.put('codes',id,{...k,usedBy:S.user.id,usedAt:Date.now()});toast('Kích hoạt thành công');return true;
+  await DB.put('codes',id,{...k,usedBy:S.user.id,usedAt:Date.now()});toast('Kích hoạt thành công');await loadEnr();return true;
 }
 FORM.redeem=async(f,d)=>{if(await redeem(d.code))go('my')};
 
@@ -389,6 +392,37 @@ VIEWS.ips=async()=>{
   <div class="card">${rows.length?`<table><tr><th>Học viên</th><th>Số lần</th><th>Số IP</th><th>Lần gần nhất</th><th>Cảnh báo</th><th>Chi tiết IP</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b><div class="id mu">${esc(r.u)}</div></td><td class="mono">${r.n}</td><td class="mono">${r.all.size}</td><td class="sm">${new Date(r.last.at).toLocaleString('vi-VN')}<div class="mono mu">${esc(r.last.ip)}</div></td><td>${r.close?'<span class="tag r">2 IP trong 10 phút</span> ':''}${r.ips24.size>=3?'<span class="tag a">3 IP trở lên trong 24 giờ</span> ':''}${r.kicks>=2?`<span class="tag a">Đẩy thiết bị khác ra ${r.kicks} lần</span>`:''}${r.flag?'':'<span class="mu sm">Bình thường</span>'}</td><td><details><summary class="sm">Xem</summary>${Object.entries(r.per).map(([ip,o])=>`<div class="mono sm">${esc(ip)}: ${o.n} lần, gần nhất ${new Date(o.t).toLocaleString('vi-VN')}</div>`).join('')}</details></td></tr>`).join('')}</table>`:'<p class="mu">Chưa có lượt đăng nhập nào của học viên được ghi lại.</p>'}</div>`;
 };
 
+/* ---- Tài khoản: đổi mật khẩu, đặt lại mật khẩu ---- */
+VIEWS.acc=()=>{
+  $('#main').innerHTML=`<h1>Tài khoản của tôi</h1>${S.user.mustChange?'<div class="card bad">Bạn cần đặt mật khẩu mới trước khi tiếp tục sử dụng.</div>':''}
+  <form class="card" data-f="pw" style="max-width:440px"><div style="display:grid;gap:12px;margin-bottom:14px"><div><label>Mật khẩu hiện tại</label><input name="old" type="password" required autocomplete="current-password"></div><div><label>Mật khẩu mới (từ 6 ký tự)</label><input name="new" type="password" required minlength="6" autocomplete="new-password"></div><div><label>Nhập lại mật khẩu mới</label><input name="new2" type="password" required minlength="6" autocomplete="new-password"></div></div><button class="btn">Đổi mật khẩu</button></form>
+  <div class="card mu sm" style="max-width:440px">Tên đăng nhập: <b class="mono">${esc(S.user.id)}</b>. Nếu quên mật khẩu, hãy nhờ quản trị viên đặt lại.</div>`;
+};
+FORM.pw=async(f,d)=>{
+  if(d.new!==d.new2)return toast('Hai mật khẩu mới không khớp');
+  if(d.new===d.old)return toast('Mật khẩu mới phải khác mật khẩu hiện tại');
+  const u=await DB.get('users',S.user.id);
+  if(!u||u.hash!==await sha(u.id+':'+d.old))return toast('Mật khẩu hiện tại không đúng');
+  const n={...u,hash:await sha(u.id+':'+d.new),mustChange:false};await DB.put('users',u.id,n);S.user=n;f.reset();toast('Đã đổi mật khẩu');go(n.role==='admin'?'home':'cat');
+};
+ACT.pwreset=async d=>{
+  const u=await DB.get('users',d.i);if(!u||!confirm('Đặt lại mật khẩu của '+u.name+'? Mật khẩu cũ sẽ không dùng được nữa.'))return;
+  const A='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';let pw='';crypto.getRandomValues(new Uint8Array(8)).forEach(n=>pw+=A[n%A.length]);
+  await DB.put('users',u.id,{...u,hash:await sha(u.id+':'+pw),mustChange:true});(S.fresh=S.fresh||[]).push({user:u.id,pw});go('users');
+};
+
+/* ---- Thông báo ---- */
+async function loadEnr(){S.enr=new Set((await DB.list('enroll')).filter(e=>e.user===S.user.id).map(e=>e.courseId))}
+function updBadge(list){const b=$('#nb');if(!b||!S.enr)return;const seen=+localStorage.getItem('edp_seen_'+S.user.id)||0,n=list.filter(x=>(!x.courseId||S.enr.has(x.courseId))&&x.at>seen).length;b.hidden=!n;b.textContent=n}
+VIEWS.notices=async()=>{
+  const[ns,cs]=await Promise.all([DB.list('notices'),DB.list('courses')]),adm=S.user.role==='admin',cn=id=>id?esc((cs.find(c=>c.id===id)||{}).name||'(khóa học đã xóa)'):'Tất cả học viên';
+  let list=[...ns].sort((a,b)=>b.at-a.at);
+  if(!adm){await loadEnr();list=list.filter(n=>!n.courseId||S.enr.has(n.courseId));if(list.length)localStorage.setItem('edp_seen_'+S.user.id,Math.max(...list.map(n=>n.at)));S.nl=ns;updBadge(ns)}
+  $('#main').innerHTML=`<h1>Thông báo</h1>${adm?`<form class="card" data-f="notice"><div class="fg"><div><label>Tiêu đề</label><input name="title" required></div><div><label>Gửi tới</label><select name="c"><option value="">Tất cả học viên</option>${cOpts(cs)}</select></div></div><div style="margin-bottom:12px"><label>Nội dung</label><textarea name="body" required style="min-height:110px"></textarea></div><button class="btn">Đăng thông báo</button></form>`:''}
+  ${list.length?list.map(n=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3 style="margin:0">${esc(n.title)}</h3><span class="tag">${cn(n.courseId)}</span></div><div class="mu sm" style="margin:4px 0 10px">${new Date(n.at).toLocaleString('vi-VN')}</div><div style="white-space:pre-wrap">${esc(n.body)}</div>${adm?`<div style="margin-top:12px"><button class="btn r sm" data-act="del" data-c="notices" data-i="${n.id}">Xóa</button></div>`:''}</div>`).join(''):'<div class="card empty"><p class="mu">Chưa có thông báo nào.</p></div>'}`;
+};
+FORM.notice=async(f,d)=>{await DB.put('notices',uid(),{title:d.title.trim(),body:d.body.trim(),courseId:d.c,at:Date.now()});toast('Đã đăng thông báo');go('notices')};
+
 /* ---- Khu vực học viên ---- */
 VIEWS.my=async()=>{
   const[en,cs,at]=await Promise.all([DB.list('enroll'),DB.list('courses'),DB.list('attempts')]);
@@ -416,10 +450,10 @@ VIEWS.live=()=>{
 /* ===== Người dùng & Cài đặt ===== */
 VIEWS.users=async()=>{
   const us=await DB.list('users');
-  $('#main').innerHTML=`<h1>Người dùng</h1><form class="card" data-f="user"><div class="fg"><div><label>Họ tên</label><input name="name" required></div><div><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+"></div><div><label>Mật khẩu (từ 6 ký tự)</label><input name="pw" required minlength="6"></div><div><label>Vai trò</label><select name="role"><option value="student">Học viên</option><option value="admin">Quản trị viên</option></select></div></div><button class="btn">Tạo tài khoản</button></form>
-  <div class="card"><table><tr><th>Họ tên</th><th>Tên đăng nhập</th><th>Vai trò</th><th></th></tr>${us.map(u=>`<tr><td>${esc(u.name)}</td><td class="id">${esc(u.id)}</td><td>${u.role==='admin'?'Quản trị':'Học viên'}</td><td>${u.id===S.user.id?'':`<button class="btn r sm" data-act="del" data-c="users" data-i="${u.id}">Xóa</button>`}</td></tr>`).join('')}</table></div>`;
+  $('#main').innerHTML=`<h1>Người dùng</h1><form class="card" data-f="user"><div class="fg"><div><label>Họ tên</label><input name="name" required></div><div><label>Tên đăng nhập</label><input name="user" required pattern="[A-Za-z0-9._\\-]+"></div><div><label>Mật khẩu (từ 6 ký tự)</label><input name="pw" required minlength="6"></div><div><label>Vai trò</label><select name="role"><option value="student">Học viên</option><option value="admin">Quản trị viên</option></select></div></div><label style="display:flex;gap:8px;align-items:center;color:var(--tx);margin-bottom:12px"><input type="checkbox" name="must" checked style="width:auto"> Bắt buộc đổi mật khẩu khi đăng nhập lần đầu</label><button class="btn">Tạo tài khoản</button></form>${S.fresh&&S.fresh.length?`<div class="card ok"><h3>Thông tin đăng nhập mới</h3><p class="mu sm">Mật khẩu chỉ hiện ở đây cho đến khi bạn rời khỏi mục này hoặc tải lại trang, vì web không lưu mật khẩu dạng đọc được. Hãy sao chép và gửi cho học viên.</p><textarea readonly class="mono" onclick="this.select()">${esc(S.fresh.map(x=>x.user+' / '+x.pw).join('\n'))}</textarea></div>`:''}
+  <div class="card"><table><tr><th>Họ tên</th><th>Tên đăng nhập</th><th>Vai trò</th><th></th></tr>${us.map(u=>`<tr><td>${esc(u.name)}</td><td class="id">${esc(u.id)}</td><td>${u.role==='admin'?'Quản trị':'Học viên'}</td><td>${u.id===S.user.id?'':`<button class="btn o sm" data-act="pwreset" data-i="${u.id}">Đặt lại mật khẩu</button> <button class="btn r sm" data-act="del" data-c="users" data-i="${u.id}">Xóa</button>`}</td></tr>`).join('')}</table></div>`;
 };
-FORM.user=async(f,d)=>{const id=d.user.trim().toLowerCase();if((await DB.list('users')).some(u=>u.id===id))return toast('Tên đăng nhập đã tồn tại');await DB.put('users',id,{id,name:d.name.trim(),role:d.role,hash:await sha(id+':'+d.pw)});toast('Đã tạo tài khoản');go('users')};
+FORM.user=async(f,d)=>{const id=d.user.trim().toLowerCase();if((await DB.list('users')).some(u=>u.id===id))return toast('Tên đăng nhập đã tồn tại');await DB.put('users',id,{id,name:d.name.trim(),role:d.role,hash:await sha(id+':'+d.pw),mustChange:!!d.must});(S.fresh=S.fresh||[]).push({user:id,pw:d.pw});toast('Đã tạo tài khoản');go('users')};
 VIEWS.set=()=>{
   $('#main').innerHTML=`<h1>Cài đặt</h1><div class="card"><b>Nơi lưu dữ liệu hiện tại:</b> ${MODE}<div style="margin-top:10px">${badge()} <span class="sm">${PID?'Đã đồng bộ cloud: '+esc(PID):'Chưa đồng bộ, đang dùng chế độ cục bộ'}</span> <button class="btn o sm" data-act="ping">Kiểm tra kết nối</button></div></div>
   ${localStorage.getItem('edp_fbcfg')?`<div class="card"><h3>Cho học viên dùng chung cloud</h3><p class="mu sm">Cấu hình vừa dán chỉ nằm trong trình duyệt của bạn nên máy học viên chưa thấy. Mở <code>index.html</code>, thay dòng <code>const EMBEDDED_CFG=null;</code> bằng dòng dưới, rồi đưa lại lên GitHub.</p><textarea readonly class="mono" onclick="this.select()">const EMBEDDED_CFG=${esc(localStorage.getItem('edp_fbcfg'))};</textarea></div>`:''}<form class="card" data-f="fb"><h3>Kết nối Firebase Cloud Firestore</h3><p class="mu sm">Dán đối tượng firebaseConfig (JSON) lấy từ Firebase Console. Sau khi lưu, trang tải lại và dùng Firestore với các collection: users, courses, codes, questions, enroll, attempts. Dữ liệu đang lưu cục bộ không tự chuyển sang Firestore.</p>
